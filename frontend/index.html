@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Hub - Document Intelligence Platform</title>
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Style Sheet -->
+    <link rel="stylesheet" href="css/style.css?v=1.2">
+    <!-- Icon Set -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="dark-theme">
+
+    <!-- Auth Modal (Overlay) -->
+    <!-- Auth Modal (Overlay) -->
+    <div id="auth-modal" class="auth-overlay active">
+        <div class="auth-glass new-split-glass">
+            
+            <!-- Left Panel (Form) -->
+            <div class="auth-left-form-panel">
+                <div class="auth-brand-top">
+                    <div class="logo-icon-small"><i data-lucide="layers"></i></div>
+                    <h2>Project<span>Hub</span></h2>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form active">
+                    <h3 class="auth-title-large">Log in</h3>
+                    <p class="auth-subtitle-small">Welcome back! Please enter your details.</p>
+
+                    <div class="form-group form-group-new">
+                        <label for="login-email">Email <span class="required-star">*</span></label>
+                        <input type="email" id="login-email" required placeholder="olivia@untitledui.com">
+                    </div>
+                    <div class="form-group form-group-new">
+                        <label for="login-password">Password <span class="required-star">*</span></label>
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </div>
+                    
+                    <div class="form-options-row">
+                        <div class="remember-me-new">
+                            <label>
+                                <input type="checkbox" id="login-remember"> Remember me
+                            </label>
+                        </div>
+                        <a href="#" id="go-to-forgot-password" class="forgot-link-new">Forgot password</a>
+                    </div>
+
+                    <div class="auth-error" id="login-error"></div>
+                    <button type="submit" class="btn btn-blue btn-block">Sign in</button>
+
+                    <p class="auth-bottom-text">Don't have an account? <span id="go-to-register" class="link-btn">Sign up</span></p>
+                    <p class="auth-bottom-text" style="margin-top: 12px;"><span id="go-to-admin-login" class="link-btn" style="color: #7c3aed; font-weight: 600;">Login as Admin</span></p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form">
+                    <h3 class="auth-title-large">Sign up</h3>
+                    <p class="auth-subtitle-small">Create an account to start collaborating.</p>
+
+                    <div class="form-group form-group-new">
+                        <label for="register-name">Full Name <span class="required-star">*</span></label>
+                        <input type="text" id="register-name" required placeholder="Olivia Rhye">
+                    </div>
+                    <div class="form-group form-group-new">
+                        <label for="register-email">Email <span class="required-star">*</span></label>
+                        <input type="email" id="register-email" required placeholder="olivia@untitledui.com">
+                    </div>
+                    <div class="form-group form-group-new">
+                        <label for="register-password">Password <span class="required-star">*</span></label>
+                        <input type="password" id="register-password" required placeholder="••••••••">
+                    </div>
+                    
+                    <div class="auth-error" id="register-error"></div>
+                    <button type="submit" class="btn btn-blue btn-block">Sign up</button>
+
+                    <p class="auth-bottom-text">Already have an account? <span id="go-to-login" class="link-btn">Log in</span></p>
+                </form>
+
+                <!-- Admin Login Form -->
+                <form id="admin-login-form" class="auth-form">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: #f3f0ff; padding: 6px 14px; border-radius: 20px; margin-bottom: 20px;">
+                        <i data-lucide="shield-check" style="width: 16px; height: 16px; color: #7c3aed;"></i>
+                        <span style="font-size: 12px; font-weight: 600; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px;">Administrator Access</span>
+                    </div>
+                    <h3 class="auth-title-large">Admin Sign in</h3>
+                    <p class="auth-subtitle-small">This login is restricted to authorized administrators only.</p>
+
+                    <div class="form-group form-group-new">
+                        <label for="admin-login-email">Admin Email <span class="required-star">*</span></label>
+                        <input type="email" id="admin-login-email" required placeholder="admin@company.com">
+                    </div>
+                    <div class="form-group form-group-new">
+                        <label for="admin-login-password">Password <span class="required-star">*</span></label>
+                        <input type="password" id="admin-login-password" required placeholder="••••••••">
+                    </div>
+
+                    <div class="auth-error" id="admin-login-error"></div>
+                    <button type="submit" class="btn btn-block" style="background: #7c3aed; color: #ffffff; font-weight: 500; padding: 12px; border-radius: 8px;">Sign in as Admin</button>
+
+                    <p class="auth-bottom-text" style="margin-top: 20px;"><span id="go-back-to-user-login" class="link-btn">Back to User Login</span></p>
+                </form>
+
+                <!-- Forgot Password Form -->
+                <form id="forgot-password-form" class="auth-form">
+                    <h3 class="auth-title-large">Reset Password</h3>
+                    <p class="auth-subtitle-small">Enter your corporate email and we'll send a recovery link.</p>
+
+                    <div class="form-group form-group-new">
+                        <label for="forgot-email">Email <span class="required-star">*</span></label>
+                        <input type="email" id="forgot-email" required placeholder="colleague@example.com">
+                    </div>
+
+                    <div class="auth-error" id="forgot-error"></div>
+                    <div class="auth-success" id="forgot-success" style="color: #10b981; font-size: 13px; margin-bottom: 15px; display: none;"></div>
+                    <button type="submit" class="btn btn-blue btn-block">Send Reset Link</button>
+
+                    <p class="auth-bottom-text" style="margin-top: 20px;"><span id="go-back-from-forgot" class="link-btn">Back to Log in</span></p>
+                </form>
+
+                <!-- Reset Password Form -->
+                <form id="reset-password-form" class="auth-form">
+                    <h3 class="auth-title-large">Set New Password</h3>
+                    <p class="auth-subtitle-small">Create a new secure password for your account.</p>
+
+                    <div class="form-group form-group-new">
+                        <label for="reset-new-password">New Password <span class="required-star">*</span></label>
+                        <input type="password" id="reset-new-password" required placeholder="••••••••" minlength="6">
+                    </div>
+                    <div class="form-group form-group-new">
+                        <label for="reset-confirm-password">Confirm Password <span class="required-star">*</span></label>
+                        <input type="password" id="reset-confirm-password" required placeholder="••••••••" minlength="6">
+                    </div>
+
+                    <div class="auth-error" id="reset-error"></div>
+                    <div class="auth-success" id="reset-success" style="color: #10b981; font-size: 13px; margin-bottom: 15px; display: none;"></div>
+                    <button type="submit" class="btn btn-blue btn-block">Update Password</button>
+
+                    <p class="auth-bottom-text" style="margin-top: 20px;"><span id="go-back-from-reset" class="link-btn">Back to Log in</span></p>
+                </form>
+            </div>
+
+            <!-- Right Panel (Visual) -->
+            <div class="auth-right-visual-panel">
+                <div class="visual-content">
+                    <div class="visual-logo-icon"><i data-lucide="layers"></i></div>
+                    <h3>Welcome to ProjectHub</h3>
+                    <p>Effortlessly collaborate on documents and chat with project data. Simplify knowledge sharing, improve response rates, and create an engaging experience for your team.</p>
+                </div>
+                
+                <div class="chat-bubbles-container">
+                    <div class="chat-bubble-system">
+                        <div class="chat-avatar"><i data-lucide="layers"></i></div>
+                        <div class="chat-text-box">
+                            <span class="chat-sender">ProjectHub</span>
+                            <p>Hello, this is ProjectHub, your RAG assistant. In today's session, we'd like to help you analyze your project documents.</p>
+                        </div>
+                    </div>
+                    <div class="chat-bubble-user">
+                        <div class="chat-text-box">
+                            <span class="chat-sender">You</span>
+                            <p>Yes, I'm ready. Let's go</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Grid -->
+    <div id="app-container" class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar-glass">
+            <div class="sidebar-brand">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="logo-icon"><i data-lucide="layers"></i></div>
+                    <h2>Project<span>Hub</span></h2>
+                </div>
+                <button id="btn-sidebar-close" class="btn-sidebar-toggle" title="Close sidebar" aria-label="Close sidebar">
+                    <i data-lucide="panel-left-close"></i>
+                </button>
+            </div>
+
+            <!-- Global Project Selector -->
+            <div class="global-project-selector">
+                <label class="global-project-label">
+                    <i data-lucide="folder-dot" style="width:13px;height:13px;"></i>
+                    Active Project
+                </label>
+                <select id="global-project-select" class="global-project-select">
+                    <option value="">— Select a project —</option>
+                </select>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" id="nav-dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#projects" class="nav-item" id="nav-projects">
+                    <i data-lucide="folder-kanban"></i>
+                    <span>Projects</span>
+                </a>
+                <a href="#milestones" class="nav-item" id="nav-milestones">
+                    <i data-lucide="milestone"></i>
+                    <span>Milestones</span>
+                </a>
+                <a href="#uploads" class="nav-item" id="nav-uploads">
+                    <i data-lucide="upload-cloud"></i>
+                    <span>Upload Documents</span>
+                </a>
+                <a href="#chat" class="nav-item" id="nav-chat">
+                    <i data-lucide="message-square-code"></i>
+                    <span>AI Chatbot (RAG)</span>
+                </a>
+                <a href="#stories" class="nav-item" id="nav-stories">
+                    <i data-lucide="layout-template"></i>
+                    <span>User Stories</span>
+                </a>
+                <a href="#mytasks" class="nav-item" id="nav-mytasks">
+                    <i data-lucide="clipboard-check"></i>
+                    <span>My Tasks</span>
+                </a>
+                <a href="#logs" class="nav-item" id="nav-logs">
+                    <i data-lucide="history"></i>
+                    <span>Activity Log</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar-char" style="overflow:hidden; padding:0;">U</div>
+                    <img id="sidebar-avatar-img" src="" alt="Avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:none;flex-shrink:0;">
+                    <div class="user-details">
+                        <h4 id="user-fullname">User Name</h4>
+                        <p id="user-email">email@company.com</p>
+                    </div>
+                </div>
+                <button class="btn-signout" id="btn-edit-profile" style="margin-bottom: 8px; color: var(--color-primary); border-color: rgba(37, 99, 235, 0.2); background: rgba(37, 99, 235, 0.05);">
+                    <i data-lucide="user-cog"></i>
+                    <span>Edit Profile</span>
+                </button>
+                <button class="btn-signout" id="btn-signout">
+                    <i data-lucide="log-out"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Floating Sidebar Open Button (When Collapsed) -->
+            <button id="btn-sidebar-open" class="btn-sidebar-open" title="Open sidebar" aria-label="Open sidebar" style="display: none;">
+                <i data-lucide="panel-left"></i>
+            </button>
+
+            <!-- Notification Toast -->
+            <div id="toast" class="toast-card"></div>
+
+            <!-- Notification Bell -->
+            <div class="notification-bell-container" id="notif-container" style="display: none;">
+                <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
+                    <i data-lucide="bell"></i>
+                    <span class="notif-badge" id="notif-badge" style="display: none;">0</span>
+                </button>
+                <div class="notif-dropdown glass-panel" id="notif-dropdown" style="display: none;">
+                    <div class="notif-header">
+                        <h3>Notifications</h3>
+                        <button id="btn-read-all-notifs" class="btn-link">Mark all as read</button>
+                    </div>
+                    <div class="notif-list" id="notif-list">
+                        <div class="notif-empty">No notifications yet.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page 1: Dashboard -->
+            <section id="section-dashboard" class="content-section active">
+                <header class="section-header">
+                    <div>
+                        <h1>Workspace Dashboard</h1>
+                        <p>Team overview, statistics, and project activities.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-secondary btn-open-assign-admin-modal admin-only-btn" style="display: none; align-items: center; gap: 6px; background: rgba(202, 138, 4, 0.1); color: #ca8a04; border: 1px solid #ca8a04; font-weight: 600; cursor: pointer;">
+                            <i data-lucide="shield-alert"></i> Assign Admin
+                        </button>
+                        <button class="btn btn-secondary btn-open-invite-modal admin-only-btn" style="display: none; align-items: center; gap: 6px; background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: 1px solid #7c3aed; font-weight: 600; cursor: pointer;">
+                            <i data-lucide="user-plus"></i> Invite Others
+                        </button>
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon icon-blue"><i data-lucide="folder"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-projects">0</h3>
+                            <p>Total Projects</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon icon-orange"><i data-lucide="milestone"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-milestones">0</h3>
+                            <p>Active Milestones</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon icon-green"><i data-lucide="file-text"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-documents">0</h3>
+                            <p>Uploaded Files</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-body">
+                    <div class="dashboard-recent glass-panel">
+                        <div class="panel-header">
+                            <h3><i data-lucide="activity"></i> Recent Activity Log</h3>
+                            <a href="#logs" class="btn btn-text text-link" id="dash-view-all-logs">View All</a>
+                        </div>
+                        <div class="activity-timeline" id="dash-timeline-list">
+                            <!-- Populated dynamically -->
+                            <p class="timeline-empty">No activity logged yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 2: Projects -->
+            <section id="section-projects" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>Projects Hub</h1>
+                        <p>Create, inspect, and organize shared workspace projects.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-secondary btn-open-assign-admin-modal admin-only-btn" style="display: none; align-items: center; gap: 6px; background: rgba(202, 138, 4, 0.1); color: #ca8a04; border: 1px solid #ca8a04; font-weight: 600; cursor: pointer;">
+                            <i data-lucide="shield-alert"></i> Assign Admin
+                        </button>
+                        <button class="btn btn-secondary btn-open-invite-modal admin-only-btn" style="display: none; align-items: center; gap: 6px; background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: 1px solid #7c3aed; font-weight: 600; cursor: pointer;">
+                            <i data-lucide="user-plus"></i> Invite Others
+                        </button>
+                        <button class="btn btn-primary" id="btn-open-create-project-modal">
+                            <i data-lucide="plus"></i> New Project
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Project List Grid -->
+                <div class="projects-grid" id="project-cards-container">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Create Project Modal Drawer -->
+                <div id="create-project-modal" class="modal-overlay">
+                    <div class="modal-glass">
+                        <div class="modal-header">
+                            <h3>Create New Project</h3>
+                            <button class="modal-close" id="btn-close-project-modal"><i data-lucide="x"></i></button>
+                        </div>
+                        <form id="create-project-form">
+                            <div class="form-group">
+                                <label for="project-name">Project Title</label>
+                                <input type="text" id="project-name" required placeholder="e.g. Website Overhaul 2026">
+                            </div>
+                            <div class="form-group">
+                                <label for="project-desc">Description</label>
+                                <textarea id="project-desc" rows="4"
+                                    placeholder="Brief outline of the project objectives and contents..."></textarea>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary"
+                                    id="btn-cancel-project-modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Create Project</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Project Detail View Container (Embedded Dynamic Page) -->
+                <div id="project-detail-view" class="project-details-panel glass-panel hidden">
+                    <div class="detail-header">
+                        <button class="btn btn-text" id="btn-back-to-projects"><i data-lucide="arrow-left"></i> Back to
+                            Projects</button>
+                        <div class="project-header-main">
+                            <div class="project-title-area">
+                                <h2 id="detail-project-title">Project Name</h2>
+                                <p id="detail-project-desc">Project Description</p>
+                            </div>
+                            <div class="project-actions">
+                                <button class="btn btn-danger" id="btn-delete-project"><i data-lucide="trash-2"></i>
+                                    Delete Project</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-tabs">
+                        <button class="detail-tab active" id="tab-milestones-btn">Milestones</button>
+                        <button class="detail-tab" id="tab-documents-btn">Documents</button>
+                        <button class="detail-tab" id="tab-team-btn">Team</button>
+                    </div>
+
+                    <div class="detail-tab-content active" id="detail-tab-milestones">
+                        <div class="tab-content-header">
+                            <h3>Project Milestones</h3>
+                            <button class="btn btn-secondary btn-sm" id="btn-add-milestone-direct"><i
+                                    data-lucide="plus"></i> Add Milestone</button>
+                        </div>
+                        <div class="milestones-timeline" id="project-detail-milestones-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" id="detail-tab-documents">
+                        <div class="tab-content-header">
+                            <h3>Project Excerpts / Documents</h3>
+                            <button class="btn btn-secondary btn-sm" id="btn-add-document-direct"><i
+                                    data-lucide="upload"></i> Upload Document</button>
+                        </div>
+                        <div class="documents-table-wrapper">
+                            <table class="documents-table">
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Associated Milestone</th>
+                                        <th>Category</th>
+                                        <th>Size</th>
+                                        <th>Format</th>
+                                        <th>Uploaded At</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="project-detail-documents-list">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" id="detail-tab-team">
+                        <div class="tab-content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h3>Team Members</h3>
+                        </div>
+                        <p class="config-help" style="margin-bottom: 15px;">Add team members by email and assign them a role. Tasks will be auto-assigned based on their role when stories are generated.</p>
+                        <div id="team-management-controls" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end;">
+                            <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                                <label for="team-member-email">Member Email</label>
+                                <input type="email" id="team-member-email" placeholder="developer@example.com" style="width: 100%;">
+                            </div>
+                            <div class="form-group" style="width: 160px; margin-bottom: 0;">
+                                <label for="team-member-role">Role</label>
+                                <select id="team-member-role" class="form-select">
+                                    <option value="Frontend">Frontend</option>
+                                    <option value="Backend">Backend</option>
+                                    <option value="AI">AI</option>
+                                    <option value="Manager">Manager</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary btn-sm" id="btn-add-team-member" style="height: 38px;">
+                                <i data-lucide="user-plus"></i> Add Member
+                            </button>
+                            <button class="btn btn-secondary btn-sm" id="btn-auto-assign" style="height: 38px;" title="Auto-assign all unassigned tasks in this project to team members based on their roles">
+                                <i data-lucide="sparkles"></i> Auto-Assign Tasks
+                            </button>
+                        </div>
+                        <div class="documents-table-wrapper">
+                            <table class="documents-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Added</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team-members-list">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 3: Milestones -->
+            <section id="section-milestones" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>Milestones Roadmap</h1>
+                        <p>Track project timelines, dates, and stage deliveries.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-open-create-milestone-modal">
+                        <i data-lucide="plus"></i> New Milestone
+                    </button>
+                </header>
+
+                <!-- Project filter hidden: uses global Active Project from sidebar -->
+                <div class="project-selector-wrapper glass-panel" style="display: none !important;">
+                    <label for="milestone-project-filter"><i data-lucide="filter"></i> Filter Timeline by
+                        Project:</label>
+                    <select id="milestone-project-filter" class="form-select">
+                        <option value="">-- Choose a Project --</option>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="roadmap-container" id="roadmap-timeline">
+                    <!-- Populated dynamically -->
+                    <div class="timeline-empty-state">
+                        <i data-lucide="compass" class="icon-lg"></i>
+                        <h3>Set an active project in the sidebar to view its roadmap.</h3>
+                        <p>No active project is set, or the selected project has no milestones yet.</p>
+                    </div>
+                </div>
+
+                <!-- Create Milestone Modal Drawer -->
+                <div id="create-milestone-modal" class="modal-overlay">
+                    <div class="modal-glass">
+                        <div class="modal-header">
+                            <h3>Create New Milestone</h3>
+                            <button class="modal-close" id="btn-close-milestone-modal"><i data-lucide="x"></i></button>
+                        </div>
+                        <form id="create-milestone-form">
+                            <!-- Target Project hidden: auto-filled from global Active Project -->
+                            <div class="form-group" style="display: none;">
+                                <label for="milestone-project-id">Target Project</label>
+                                <select id="milestone-project-id" required class="form-select">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="milestone-title">Milestone Title</label>
+                                <input type="text" id="milestone-title" required
+                                    placeholder="e.g. MVP Launch / Review Phase">
+                            </div>
+                            <div class="form-group">
+                                <label for="milestone-desc">Description</label>
+                                <textarea id="milestone-desc" rows="3"
+                                    placeholder="Define deliverables for this milestone..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="milestone-due">Due Date</label>
+                                <input type="date" id="milestone-due" required>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary"
+                                    id="btn-cancel-milestone-modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Create Milestone</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 4: Document Uploads -->
+            <section id="section-uploads" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>Ingest Documents</h1>
+                        <p>Upload project documents (PDF, DOCX, XLSX, HTML, TXT) to index into the pgvector RAG
+                            database.</p>
+                    </div>
+                </header>
+
+                <div class="upload-layout">
+                    <!-- Config Panel -->
+                    <div class="upload-config glass-panel">
+                        <h3>1. Ingestion Target</h3>
+                        <p class="config-help">The active project is set from the sidebar. Choose an optional milestone and category below.</p>
+
+                        <!-- Target Project hidden: auto-filled from global Active Project -->
+                        <div class="form-group" style="display: none;">
+                            <label for="upload-project-id">Target Project *</label>
+                            <select id="upload-project-id" class="form-select" required>
+                                <option value="">-- Choose Project --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload-milestone-id">Target Milestone (Optional)</label>
+                            <select id="upload-milestone-id" class="form-select">
+                                <option value="">-- No Milestone (Global Project Doc) --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload-category">Document Category</label>
+                            <select id="upload-category" class="form-select">
+                                <option value="global">-- Global (Uncategorized) --</option>
+                                <option value="team">Team Document</option>
+                                <option value="client">Client's Document</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div class="upload-main glass-panel">
+                        <h3>2. File Dropzone</h3>
+
+                        <div id="dropzone" class="dropzone-area">
+                            <i data-lucide="upload-cloud" class="dropzone-icon"></i>
+                            <h4>Drag & Drop your document here</h4>
+                            <p>or click to browse from local explorer</p>
+                            <span class="file-specs">Supported: PDF, DOCX, XLSX, CSV, HTML, TXT (Max 15MB)</span>
+                            <input type="file" id="file-input" class="hidden-file-input" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.html,.htm,.txt">
+                        </div>
+
+                        <!-- Progress Bar & Queue Status -->
+                        <div id="upload-progress-container" class="upload-progress hidden">
+                            <div class="progress-info" style="display: flex; align-items: center; gap: 10px;">
+                                <span id="upload-filename" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">document.pdf</span>
+                                <span id="upload-percent" style="font-weight: 700; font-size: 0.9rem; min-width: 36px; text-align: right;">0%</span>
+                                <button type="button" id="cancel-upload-btn" onclick="cancelDocumentUpload()" title="Cancel Upload" style="width: 32px; height: 32px; min-width: 32px; background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.4); cursor: pointer; color: #EF4444; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.2s;">
+                                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                                </button>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                            </div>
+                            <div class="progress-status" id="upload-status-text">
+                                <i data-lucide="loader" class="spin"></i> Indexing text into vectors... Please wait.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 5: AI Chatbot (RAG) -->
+            <section id="section-chat" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>RAG Intelligence Portal</h1>
+                        <p>Ask questions from your project documents globally with live sources and vectors.</p>
+                    </div>
+                </header>
+
+                <div class="chat-layout">
+                    <!-- Left Column: Settings and Source Debugging -->
+                    <div class="chat-settings glass-panel">
+                        <h3>Context Scope</h3>
+                        <p class="config-help">The AI searches the active project's vector store set in the sidebar.</p>
+
+                        <!-- Target Project hidden: auto-filled from global Active Project -->
+                        <div class="form-group" style="display: none;">
+                            <label for="chat-project-id">Target Project</label>
+                            <select id="chat-project-id" class="form-select">
+                                <option value="">-- Choose Project --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="chat-milestone-group" style="display: none; margin-top: 15px;">
+                            <label for="chat-milestone-id">Target Milestone</label>
+                            <select id="chat-milestone-id" class="form-select">
+                                <option value="">-- All Milestones (Global Project Docs) --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="chat-category-group" style="display: none; margin-top: 15px;">
+                            <label for="chat-category">Filter by Category</label>
+                            <select id="chat-category" class="form-select">
+                                <option value="">-- All Categories --</option>
+                                <option value="team">Team Documents</option>
+                                <option value="client">Client's Documents</option>
+                            </select>
+                        </div>
+
+                        <div class="debug-toggle-wrapper" style="display: none !important;">
+                            <div class="toggle-control">
+                                <input type="checkbox" id="toggle-debug-mode">
+                                <label for="toggle-debug-mode">Enable RAG Observability</label>
+                            </div>
+                            <p class="config-help">Inspect pgvector chunk similarity scores, segments, and retrieved
+                                snippets in real-time.</p>
+                        </div>
+
+                        <!-- Live Citation Explorer -->
+                        <div class="citation-explorer" id="citation-explorer-panel" style="display: none !important;">
+                            <h4><i data-lucide="eye"></i> Retrieved Sources (Top 5)</h4>
+                            <div class="source-list" id="debug-sources-list">
+                                <p class="source-empty-state">Set an active project in the sidebar, type a question, and sources will load
+                                    here.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Chat Interface -->
+                    <div class="chat-main glass-panel">
+                        <!-- Chat Dialog Messages container -->
+                        <div class="chat-messages" id="chat-conversation-container">
+                            <div class="chat-bubble bot-message">
+                                <div class="message-header">
+                                    <span class="bot-tag"><i data-lucide="bot"></i> AI Assistant</span>
+                                </div>
+                                <div class="message-content">
+                                    Hello! Set an active project in the sidebar, then ask me any question — I'll retrieve
+                                    answers scoped to that project's documents with citations.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat input bar -->
+                        <form id="chat-input-form" class="chat-input-bar">
+                            <input type="text" id="chat-message-input" autocomplete="off"
+                                placeholder="Ask a question from this project's documents..." required disabled>
+                            <button type="submit" id="btn-chat-send" class="btn btn-primary btn-icon" disabled>
+                                <i data-lucide="send"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 6: Activity Log -->
+            <section id="section-logs" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>Activity Audit Stream</h1>
+                        <p>Chronological record of creations, modifications, uploads, and deletions.</p>
+                    </div>
+                    <button class="btn btn-secondary" id="btn-refresh-logs">
+                        <i data-lucide="refresh-cw"></i> Refresh Stream
+                    </button>
+                </header>
+
+                <div class="logs-container glass-panel">
+                    <div class="logs-table-wrapper">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Event ID</th>
+                                    <th>User / Actor</th>
+                                    <th>Action Category</th>
+                                    <th>Event Details</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 6: User Stories -->
+            <section id="section-stories" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>User Stories & Tasks</h1>
+                        <p>Generate and manage Jira-like Agile tickets from your project documents using AI.</p>
+                    </div>
+                    <div class="header-actions" style="display: flex; align-items: center; gap: 15px;">
+                        <!-- Project select hidden: auto-filled from global Active Project -->
+                        <select id="story-project-select" class="form-select" style="display: none !important;">
+                            <option value="">Select a Project...</option>
+                        </select>
+                        <button class="btn btn-secondary" id="btn-open-create-story-modal" title="Manually create a custom user story">
+                            <i data-lucide="plus"></i> Add Story
+                        </button>
+                        <button class="btn btn-primary" id="btn-generate-stories" title="Generate User Stories from all project documents using AI">
+                            <i data-lucide="sparkles"></i> Generate Stories with AI
+                        </button>
+                    </div>
+                </header>
+
+                <div class="view-toggle-bar" style="display: flex; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 15px;">
+                        <button class="view-toggle-btn active" id="btn-toggle-backlog" style="background: transparent; border: none; font-size: 0.95rem; font-weight: 600; color: #2563eb; cursor: pointer; padding: 5px 10px; border-bottom: 2px solid #2563eb; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="list-todo" style="width: 16px; height: 16px;"></i> Backlog <span id="tab-backlog-count" style="background: rgba(37, 99, 235, 0.15); color: #2563eb; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 700; margin-left: 4px;">0</span>
+                        </button>
+                        <button class="view-toggle-btn" id="btn-toggle-board" style="background: transparent; border: none; font-size: 0.95rem; font-weight: 600; color: var(--color-text-muted); cursor: pointer; padding: 5px 10px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="kanban" style="width: 16px; height: 16px;"></i> Active Board
+                        </button>
+                        <button class="view-toggle-btn" id="btn-toggle-list" style="background: transparent; border: none; font-size: 0.95rem; font-weight: 600; color: var(--color-text-muted); cursor: pointer; padding: 5px 10px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="table" style="width: 16px; height: 16px;"></i> List View <span id="tab-list-count" style="background: rgba(107, 114, 128, 0.15); color: var(--color-text-muted); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 700; margin-left: 4px;">0</span>
+                        </button>
+                    </div>
+                    <div class="toggle-my-tasks-bar" style="display: flex; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; padding: 2px;">
+                        <button id="filter-all-work" class="filter-assignee-btn active" style="padding: 6px 12px; border: none; background: #2563eb; color: #fff; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer;">All Work</button>
+                        <button id="filter-my-work" class="filter-assignee-btn" style="padding: 6px 12px; border: none; background: transparent; color: var(--color-text-main); font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer;">Assigned to Me</button>
+                    </div>
+                </div>
+
+                <div class="filters-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <div style="position: relative; flex-grow: 1; max-width: 300px;">
+                        <input type="text" id="story-search" placeholder="Search stories..." style="width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--color-text-main); font-size: 0.9rem;">
+                        <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted); pointer-events: none;"></i>
+                    </div>
+                    <select id="story-filter-priority" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--color-text-main); font-size: 0.9rem; cursor: pointer;">
+                        <option value="">All Priorities</option>
+                        <option value="Critical">Critical</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                    <!-- Jira Selection Action Bar Inline! -->
+                    <div id="jira-selection-bar" style="display: none; align-items: center; gap: 12px; font-size: 0.82rem; font-weight: 600; background: #1E293B; color: #fff; padding: 6px 14px; border-radius: 8px; margin-left: auto; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.08);">
+                        <span id="jira-selection-count" style="background: #2563EB; color: #fff; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">0</span>
+                        <span style="color: #94A3B8; font-weight: 600;">selected</span>
+                        <span style="color: #475569;">|</span>
+                        <button type="button" onclick="jiraListSelectAll()" style="background: transparent; border: none; color: #93C5FD; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                            <i data-lucide="check-check" style="width: 13px; height: 13px;"></i> Select all
+                        </button>
+                        <span style="color: #475569;">|</span>
+                        <button type="button" onclick="jiraListBulkChangeStatus()" style="background: transparent; border: none; color: #93C5FD; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i> Change status
+                        </button>
+                        <span style="color: #475569;">|</span>
+                        <button type="button" onclick="jiraListBulkDelete()" style="background: transparent; border: none; color: #F87171; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 4px 6px; border-radius: 4px; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                            <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i> Delete
+                        </button>
+                        <span style="color: #475569;">|</span>
+                        <button type="button" onclick="jiraListClearSelection()" style="background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'" title="Clear selection">
+                            <i data-lucide="x" style="width: 15px; height: 15px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="stories-backlog-view" class="jira-layout">
+                    <!-- Left: Backlog List -->
+                    <div class="backlog-panel glass-panel" id="backlog-list-container">
+                        <div class="panel-header" style="display: none !important; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i data-lucide="list"></i> Backlog <span id="panel-backlog-count" style="background: rgba(37, 99, 235, 0.15); color: #2563eb; font-size: 0.8rem; padding: 2px 10px; border-radius: 12px; font-weight: 700;">0</span></h3>
+                        </div>
+                        <div class="backlog-list" id="stories-backlog-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto;">
+                            <div class="empty-state" style="padding: 40px; text-align: center; color: var(--color-text-muted); background: #F1F5F9; border-radius: 8px;">
+                                Please select a project to view or generate its user stories.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Story Detail Panel -->
+                    <div class="story-detail-panel glass-panel" id="story-detail-panel" style="display: flex; flex-direction: column; gap: 20px; min-height: 300px; justify-content: center;">
+                        <div class="empty-state" style="padding: 40px; text-align: center; color: var(--color-text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                            <div style="opacity: 0.5; margin-bottom: 16px;"><i data-lucide="book-open" style="width: 48px; height: 48px;"></i></div>
+                            <h3 style="font-weight: 600; font-size: 1.1rem; margin: 0; color: var(--color-text-main);">No story selected</h3>
+                            <p style="margin-top: 8px; font-size: 0.9rem; max-width: 250px; margin-left: auto; margin-right: auto; line-height: 1.4;">Select a user story from the backlog to view and edit its details.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Board View -->
+                <div id="stories-board-view" class="hidden">
+                    <div id="stories-board-grid" class="kanban-grid-scroll" style="display: grid; grid-template-columns: repeat(6, minmax(260px, 1fr)); gap: 16px; min-height: 500px; overflow-x: auto; padding-bottom: 16px; scroll-behavior: smooth;">
+                        <div class="board-column glass-panel" id="board-col-todo" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #6b7280; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>TO DO</span>
+                                <span class="badge" id="badge-todo-count" style="font-size: 0.75rem; background: rgba(107, 114, 128, 0.15); color: #6b7280; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-todo" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'To Do')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="board-column glass-panel" id="board-col-inprogress" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>IN PROGRESS</span>
+                                <span class="badge" id="badge-inprogress-count" style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.15); color: #2563eb; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-inprogress" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'In Progress')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="board-column glass-panel" id="board-col-devdone" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b5cf6; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>DEV DONE</span>
+                                <span class="badge" id="badge-devdone-count" style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #7c3aed; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-devdone" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'Dev Done')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="board-column glass-panel" id="board-col-readyforqa" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f59e0b; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>READY FOR QA</span>
+                                <span class="badge" id="badge-readyforqa-count" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); color: #d97706; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-readyforqa" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'Ready for QA')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="board-column glass-panel" id="board-col-qadone" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #06b6d4; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>QA DONE</span>
+                                <span class="badge" id="badge-qadone-count" style="font-size: 0.75rem; background: rgba(6, 182, 212, 0.15); color: #0891b2; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-qadone" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'QA Done')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="board-column glass-panel" id="board-col-complete" style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); align-self: start;">
+                            <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #10b981; padding-bottom: 8px; font-size: 0.95rem; color: var(--color-text-main); margin-top: 0; margin-bottom: 5px;">
+                                <span>COMPLETE</span>
+                                <span class="badge" id="badge-complete-count" style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #059669; padding: 2px 6px; border-radius: 12px;">0</span>
+                            </h3>
+                            <div class="board-cards-container" id="cards-complete" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleBoardDrop(event, 'Complete')">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Screenshot UI Scrollbar -->
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-top: 10px; background: #E8EEF5; border-radius: 6px; border: 1px solid #D8E2ED;">
+                        <button type="button" onclick="document.getElementById('stories-board-grid').scrollBy({left: -320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                            <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L1 6L9 11V1Z" fill="#0EA5E9"/></svg>
+                        </button>
+                        <div style="flex-grow: 1; display: flex; align-items: center;">
+                            <input type="range" min="0" max="1000" value="0" class="kanban-scroll-range" data-target="stories-board-grid" style="width: 100%; height: 12px; cursor: pointer;">
+                        </div>
+                        <button type="button" onclick="document.getElementById('stories-board-grid').scrollBy({left: 320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                            <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" fill="#0EA5E9"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="stories-list-view" class="hidden" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px;">
+                    <div id="stories-list-scroll-wrapper" style="overflow-x: auto;">
+                        <table class="jira-list-table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color); background: var(--bg-body); color: var(--color-text-muted); font-weight: 700; font-size: 0.78rem;">
+                                    <th style="width: 38px; padding: 10px 12px; text-align: center;">
+                                        <input type="checkbox" id="jira-list-select-all" onchange="jiraListToggleSelectAll(this.checked)" style="cursor: pointer; width: 14px; height: 14px; accent-color: var(--color-primary);">
+                                    </th>
+                                    <th style="padding: 10px 14px; min-width: 280px;">Work</th>
+                                    <th style="padding: 10px 14px; width: 160px;">Assignee</th>
+                                    <th style="padding: 10px 14px; width: 150px;">Reporter</th>
+                                    <th style="padding: 10px 14px; width: 145px;">Due date</th>
+                                    <th style="padding: 10px 14px; width: 130px;">Priority</th>
+                                    <th style="padding: 10px 14px; width: 150px;">Status</th>
+                                    <th style="padding: 10px 14px; width: 160px;">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stories-list-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Custom Horizontal Scrollbar for List View -->
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: #E8EEF5; border-top: 1px solid #D8E2ED; border-bottom: 1px solid #D8E2ED;">
+                        <button type="button" onclick="document.getElementById('stories-list-scroll-wrapper').scrollBy({left: -320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                            <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L1 6L9 11V1Z" fill="#0EA5E9"/></svg>
+                        </button>
+                        <div style="flex-grow: 1; display: flex; align-items: center;">
+                            <input type="range" min="0" max="1000" value="0" class="kanban-scroll-range" data-target="stories-list-scroll-wrapper" style="width: 100%; height: 12px; cursor: pointer;">
+                        </div>
+                        <button type="button" onclick="document.getElementById('stories-list-scroll-wrapper').scrollBy({left: 320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                            <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" fill="#0EA5E9"/></svg>
+                        </button>
+                    </div>
+                    <!-- Jira Table Footer -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.85rem; color: var(--color-text-muted);">
+                        <button type="button" onclick="document.getElementById('btn-open-create-story-modal').click()" style="display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--color-text-main); font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 4px;">
+                            <i data-lucide="plus" style="width: 16px; height: 16px; color: var(--color-primary);"></i> Create
+                        </button>
+                        <span id="jira-list-footer-count" style="font-weight: 600;">1 of 1</span>
+                    </div>
+                </div>
+
+                <!-- Create Manual Story Modal -->
+                <div id="create-story-modal" class="modal-overlay">
+                    <div class="modal-glass">
+                        <div class="modal-header">
+                            <h3>Create User Story</h3>
+                            <button class="modal-close" id="btn-close-story-modal"><i data-lucide="x"></i></button>
+                        </div>
+                        <form id="create-story-form">
+                            <div class="form-group">
+                                <label for="story-title-input">Title</label>
+                                <input type="text" id="story-title-input" required placeholder="As a [user], I want to [action]...">
+                            </div>
+                            <div class="form-group">
+                                <label for="story-desc-input">Description</label>
+                                <textarea id="story-desc-input" rows="3" placeholder="Additional context..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="story-ac-input">Acceptance Criteria (One per line)</label>
+                                <textarea id="story-ac-input" rows="2" placeholder="Criterion 1&#10;Criterion 2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="story-subtasks-input">Subtasks (One per line, format: Title [Role] e.g. Setup API [Backend])</label>
+                                <textarea id="story-subtasks-input" rows="2" placeholder="Design UI components [Frontend]&#10;Implement API endpoint [Backend]&#10;Integrate RAG prompt [AI]"></textarea>
+                                <small style="color: var(--color-text-muted); font-size: 11px;">Roles: Frontend, Backend, AI, Manager (defaults to Backend if omitted).</small>
+                            </div>
+                            <div class="form-group" style="display: flex; gap: 15px;">
+                                <div style="flex: 1;">
+                                    <label for="story-priority-input">Priority</label>
+                                    <select id="story-priority-input" class="form-select">
+                                        <option value="Critical">Critical</option>
+                                        <option value="High">High</option>
+                                        <option selected value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="story-points-input">Story Points</label>
+                                    <select id="story-points-input" class="form-select">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option selected value="3">3</option>
+                                        <option value="5">5</option>
+                                        <option value="8">8</option>
+                                        <option value="13">13</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" id="btn-cancel-story-modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Story</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page 8: My Tasks -->
+            <section id="section-mytasks" class="content-section">
+                <header class="section-header">
+                    <div>
+                        <h1>My Tasks</h1>
+                        <p>View all tasks assigned to you across all projects.</p>
+                    </div>
+                    <button class="btn btn-secondary" id="btn-refresh-mytasks">
+                        <i data-lucide="refresh-cw"></i> Refresh
+                    </button>
+                </header>
+
+                <div class="mytasks-board kanban-grid-scroll" id="mytasks-board-grid" style="display: grid; grid-template-columns: repeat(6, minmax(260px, 1fr)); gap: 16px; min-height: 500px; overflow-x: auto; padding-bottom: 16px; scroll-behavior: smooth;">
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--color-text-muted); font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #6b7280; border-radius: 50%; display: inline-block;"></span>
+                            To Do
+                        </h3>
+                        <div id="mytasks-todo" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'To Do')"></div>
+                    </div>
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #3b82f6; font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; display: inline-block;"></span>
+                            In Progress
+                        </h3>
+                        <div id="mytasks-inprogress" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'In Progress')"></div>
+                    </div>
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #8b5cf6; font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #8b5cf6; border-radius: 50%; display: inline-block;"></span>
+                            Dev Done
+                        </h3>
+                        <div id="mytasks-devdone" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'Dev Done')"></div>
+                    </div>
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #f59e0b; font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #f59e0b; border-radius: 50%; display: inline-block;"></span>
+                            Ready for QA
+                        </h3>
+                        <div id="mytasks-readyforqa" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'Ready for QA')"></div>
+                    </div>
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #06b6d4; font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #06b6d4; border-radius: 50%; display: inline-block;"></span>
+                            QA Done
+                        </h3>
+                        <div id="mytasks-qadone" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'QA Done')"></div>
+                    </div>
+                    <div class="glass-panel" style="padding: 16px; display: flex; flex-direction: column; align-self: start;">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #10b981; font-size: 0.95rem;">
+                            <span style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
+                            Complete
+                        </h3>
+                        <div id="mytasks-complete" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;" ondragover="event.preventDefault()" ondrop="handleMyTaskBoardDrop(event, 'Complete')"></div>
+                    </div>
+                </div>
+
+                <!-- Custom Screenshot UI Scrollbar -->
+                <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-top: 10px; background: #E8EEF5; border-radius: 6px; border: 1px solid #D8E2ED;">
+                    <button type="button" onclick="document.getElementById('mytasks-board-grid').scrollBy({left: -320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                        <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L1 6L9 11V1Z" fill="#0EA5E9"/></svg>
+                    </button>
+                    <div style="flex-grow: 1; display: flex; align-items: center;">
+                        <input type="range" min="0" max="1000" value="0" class="kanban-scroll-range" data-target="mytasks-board-grid" style="width: 100%; height: 12px; cursor: pointer;">
+                    </div>
+                    <button type="button" onclick="document.getElementById('mytasks-board-grid').scrollBy({left: 320, behavior: 'smooth'})" style="background: transparent; border: none; color: #0EA5E9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px 6px;">
+                        <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" fill="#0EA5E9"/></svg>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Invite User Modal (Root Level for Global Access) -->
+    <div id="invite-user-modal" class="modal-overlay">
+        <div class="modal-glass">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 8px; color: #7c3aed;">
+                    <i data-lucide="user-plus"></i> Invite & Onboard New User
+                </h3>
+                <button class="modal-close" id="btn-close-invite-modal"><i data-lucide="x"></i></button>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px;">
+                Send an invitation to a colleague who isn't registered yet. We will create an account for them immediately so they can log into ProjectHub.
+            </p>
+            <form id="invite-user-form">
+                <div class="form-group">
+                    <label for="invite-email-input">Email Address <span style="color: #ef4444;">*</span></label>
+                    <input type="email" id="invite-email-input" required placeholder="colleague@example.com" style="width: 100%;">
+                </div>
+                <div class="form-group">
+                    <label for="invite-fullname-input">Full Name <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="invite-fullname-input" required placeholder="John Doe" style="width: 100%;">
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label for="invite-project-select">Assign to Project (Optional)</label>
+                        <select id="invite-project-select" class="form-select" style="width: 100%;">
+                            <option value="">-- None (Just Register) --</option>
+                        </select>
+                    </div>
+                    <div style="width: 140px;">
+                        <label for="invite-role-select">Role</label>
+                        <select id="invite-role-select" class="form-select" style="width: 100%;">
+                            <option value="Frontend">Frontend</option>
+                            <option value="Backend">Backend</option>
+                            <option value="AI">AI</option>
+                            <option value="Manager">Manager</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-invite-modal">Cancel</button>
+                    <button type="submit" class="btn" style="background: #7c3aed; color: #fff; font-weight: 500;">
+                        <i data-lucide="send" style="width: 14px; height: 14px; display: inline-block; margin-right: 4px;"></i> Send Invite
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Admin Modal (Root Level for Global Access) -->
+    <div id="assign-admin-modal" class="modal-overlay">
+        <div class="modal-glass">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 8px; color: #ca8a04;">
+                    <i data-lucide="shield-alert"></i> Assign Admin Privileges
+                </h3>
+                <button class="modal-close" id="btn-close-assign-admin-modal"><i data-lucide="x"></i></button>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px;">
+                Select a registered workspace user to promote them to Administrator. Administrators have full access to manage projects, invite users, and promote other team members.
+            </p>
+            <form id="assign-admin-form">
+                <div class="form-group">
+                    <label for="assign-admin-select">Select Registered User <span style="color: #ef4444;">*</span></label>
+                    <select id="assign-admin-select" required class="form-select" style="width: 100%;">
+                        <option value="">Loading users...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assign-admin-action">Action <span style="color: #ef4444;">*</span></label>
+                    <select id="assign-admin-action" class="form-select" style="width: 100%;">
+                        <option value="true">Promote to Administrator</option>
+                        <option value="false">Revoke Administrator Privileges</option>
+                    </select>
+                </div>
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-assign-admin-modal">Cancel</button>
+                    <button type="submit" class="btn" style="background: #ca8a04; color: #fff; font-weight: 500;">
+                        <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; margin-right: 4px;"></i> Update Privileges
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal-overlay">
+        <div class="modal-glass">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="user-cog"></i> Edit Profile
+                </h3>
+                <button class="modal-close" id="btn-close-edit-profile-modal"><i data-lucide="x"></i></button>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px;">
+                Update your personal information below.
+            </p>
+            <form id="edit-profile-form">
+                <!-- Avatar upload -->
+                <div class="form-group" style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:20px;">
+                    <div id="avatar-preview-wrap" style="position:relative; width:80px; height:80px; cursor:pointer;" onclick="document.getElementById('edit-profile-avatar').click()" title="Click to change photo">
+                        <div id="avatar-preview-char" style="width:80px;height:80px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;">U</div>
+                        <img id="avatar-preview-img" src="" alt="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:none;position:absolute;top:0;left:0;">
+                        <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--color-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+                            <i data-lucide="camera" style="width:14px;height:14px;color:#fff;"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="edit-profile-avatar" accept="image/*" style="display:none;">
+                    <small style="color:var(--color-text-muted);">Click photo to change &bull; Max 2 MB</small>
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-name">Full Name</label>
+                    <input type="text" id="edit-profile-name" style="width: 100%;" required>
+                </div>
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-edit-profile-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Page loading script -->
+    <script src="js/app.js?v=2.9"></script>
+</body>
+
+</html>

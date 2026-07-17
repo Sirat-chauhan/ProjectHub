@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Local configuration
+.env
+*.env
+
+# Uploaded project documents (local storage)
+uploads/
+backend/uploads/
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Testing/Coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
