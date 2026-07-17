@@ -613,24 +613,27 @@ async def upload_avatar(
     relative_url = ""
 
     if storage_service.use_supabase:
-        supabase_path = f"avatars/{filename}"
+        supabase_path = f"{filename}"
         try:
             # Try to delete the old avatar from Supabase if it exists
-            if current_user.profile_image and "/storage/v1/object/public/documents/avatars/" in current_user.profile_image:
+            if current_user.profile_image and "/storage/v1/object/public/" in current_user.profile_image:
                 old_filename = current_user.profile_image.split("/")[-1]
                 try:
-                    storage_service.supabase.storage.from_("documents").remove([f"avatars/{old_filename}"])
+                    if "documents/avatars" in current_user.profile_image:
+                        storage_service.supabase.storage.from_("documents").remove([f"avatars/{old_filename}"])
+                    else:
+                        storage_service.supabase.storage.from_("avatars").remove([f"{old_filename}"])
                 except Exception:
                     pass
 
-            # Upload the new avatar
-            storage_service.supabase.storage.from_("documents").upload(
+            # Upload the new avatar to the dedicated public 'avatars' bucket
+            storage_service.supabase.storage.from_("avatars").upload(
                 supabase_path,
                 contents,
                 {"content-type": file.content_type}
             )
             # Use the public URL directly
-            relative_url = storage_service.supabase.storage.from_("documents").get_public_url(supabase_path)
+            relative_url = storage_service.supabase.storage.from_("avatars").get_public_url(supabase_path)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to upload avatar to Supabase: {str(e)}")
     else:
