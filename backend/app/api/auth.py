@@ -70,14 +70,11 @@ def record_successful_login(identifier: str):
     if identifier in FAILED_LOGIN_ATTEMPTS:
         del FAILED_LOGIN_ATTEMPTS[identifier]
 
-def get_supabase():
-    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
-        try:
-            from supabase import create_client
-            return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
-        except Exception as e:
-            print(f"[ProjectHub] Supabase auth client error: {e}")
-    return None
+import requests
+
+def get_neon_auth_url():
+    url = getattr(settings, "NEON_AUTH_URL", None) or os.getenv("NEON_AUTH_URL")
+    return url.rstrip('/') if url else None
 
 
 def validate_corporate_domain(email: str):
@@ -106,32 +103,28 @@ def register(user_in: schemas.UserCreate, request: Request, db: Session = Depend
             detail="A user with this email already exists."
         )
     
-    supabase = get_supabase()
-    if supabase:
+    neon_url = get_neon_auth_url()
+    if neon_url:
         try:
             origin = request.headers.get("origin") or "http://localhost:8000"
-            res = supabase.auth.sign_up({
-                "email": user_in.email,
-                "password": user_in.password,
-                "options": {
-                    "data": {"full_name": user_in.full_name},
-                    "email_redirect_to": f"{origin}/#login"
-                }
-            })
-            # Debug: log the full Supabase response to diagnose email delivery issues
-            print(f"[ProjectHub] Supabase sign_up response for {user_in.email}:")
-            print(f"[ProjectHub]   user object: {res.user}")
-            print(f"[ProjectHub]   session object: {res.session}")
-            if res.user:
-                print(f"[ProjectHub]   user.id: {res.user.id}")
-                print(f"[ProjectHub]   user.email_confirmed_at: {res.user.email_confirmed_at}")
-                print(f"[ProjectHub]   user.identities: {res.user.identities}")
-                # If identities is empty, Supabase found a DUPLICATE user and did NOT send email
-                if not res.user.identities:
+            res = requests.post(
+                f"{neon_url}/sign-up/email",
+                json={
+                    "email": user_in.email,
+                    "password": user_in.password,
+                    "name": user_in.full_name or user_in.email.split("@")[0]
+                },
+                timeout=10
+            )
+            print(f"[ProjectHub] Neon Auth sign_up response: {res.status_code}")
+            if res.status_code >= 400:
+                err_msg = res.json().get("message", res.text) if "application/json" in res.headers.get("Content-Type", "") else res.text
+                if "already exists" in err_msg.lower() or "duplicate" in err_msg.lower():
                     raise HTTPException(
                         status_code=409,
-                        detail="This email is already registered in Supabase Auth. Please delete it from Supabase Dashboard → Authentication → Users, then try again."
+                        detail="This email is already registered in Neon Auth. Please log in or delete it from the Neon dashboard."
                     )
+            
             local_user = User(
                 email=user_in.email,
                 hashed_password=get_password_hash(user_in.password),
@@ -144,13 +137,12 @@ def register(user_in: schemas.UserCreate, request: Request, db: Session = Depend
             db.refresh(local_user)
 
             ip = get_client_ip(request)
-            log_activity(db, local_user.id, "register_user", f"User registered: {user_in.email} [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
+            log_activity(db, local_user.id, "register_user", f"User registered (Neon Sync): {user_in.email} [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
             return local_user
         except HTTPException:
             raise
         except Exception as e:
-            err_msg = str(e)
-            print(f"[ProjectHub] Supabase sign_up error/notice: {err_msg}")
+            print(f"[ProjectHub] Neon Auth sign_up error/notice: {str(e)}")
 
     # Fallback or local registration
     local_user = User(
@@ -233,37 +225,28 @@ def invite_user(
                 db.commit()
                 assigned_project = project.name
 
-    # Try Supabase Admin Invite by Email
-    supabase = get_supabase()
-    supabase_invited = False
-    if supabase:
-        origin = request.headers.get("origin") or f"{request.url.scheme}://{request.url.netloc}"
+    # Try Neon Auth Registration (No native invite email, so we just sign them up)
+    neon_url = get_neon_auth_url()
+    neon_invited = False
+    if neon_url:
         try:
-            supabase.auth.admin.invite_user_by_email(
-                invite_in.email,
-                options={"data": {"full_name": invite_in.full_name}, "redirect_to": f"{origin}/#login"}
-            )
-            supabase_invited = True
-            print(f"[ProjectHub] Supabase invitation email sent to {invite_in.email}")
-        except Exception as e:
-            print(f"[ProjectHub] Supabase invite notice/error: {e}")
-            # If invite fails (e.g. user already exists), send a magic link/login OTP instead
-            try:
-                supabase.auth.sign_in_with_otp({
+            res = requests.post(
+                f"{neon_url}/sign-up/email",
+                json={
                     "email": invite_in.email,
-                    "options": {
-                        "email_redirect_to": f"{origin}/#login",
-                        "should_create_user": False
-                    }
-                })
-                supabase_invited = True
-                print(f"[ProjectHub] Supabase login/magic link sent to existing user {invite_in.email}")
-            except Exception as otp_err:
-                print(f"[ProjectHub] Supabase sign_in_with_otp fallback error: {otp_err}")
+                    "password": pwd if created_new else "TempPass123!",
+                    "name": invite_in.full_name
+                },
+                timeout=10
+            )
+            neon_invited = True
+            print(f"[ProjectHub] Neon Auth registration triggered for {invite_in.email}: {res.status_code}")
+        except Exception as e:
+            print(f"[ProjectHub] Neon Auth invite notice/error: {e}")
 
     msg = f"User '{user.full_name}' ({user.email}) has been successfully invited and registered!" if created_new else f"User '{user.full_name}' ({user.email}) already exists."
-    if supabase_invited:
-        msg += " An official invitation email has been sent via Supabase Auth to their inbox!"
+    if neon_invited:
+        msg += " The user has been registered in Neon Auth as well."
     if assigned_project:
         msg += f" Added to project '{assigned_project}' as '{invite_in.role or 'Frontend'}'."
 
@@ -326,29 +309,35 @@ def login(login_in: schemas.UserCreate, request: Request, db: Session = Depends(
     check_rate_limit(login_in.email)
     
     user = db.query(User).filter(User.email == login_in.email).first()
-    supabase_auth_ok = False
-    supabase = get_supabase()
-    if supabase:
+    neon_auth_ok = False
+    neon_url = get_neon_auth_url()
+    if neon_url:
         try:
-            auth_res = supabase.auth.sign_in_with_password({
-                "email": login_in.email,
-                "password": login_in.password
-            })
-            if auth_res and auth_res.user:
-                supabase_auth_ok = True
-                print(f"[ProjectHub] Supabase login successful for {login_in.email}")
+            auth_res = requests.post(
+                f"{neon_url}/sign-in/email",
+                json={
+                    "email": login_in.email,
+                    "password": login_in.password
+                },
+                timeout=10
+            )
+            if auth_res.status_code == 200:
+                neon_auth_ok = True
+                print(f"[ProjectHub] Neon Auth login successful for {login_in.email}")
+            else:
+                err_msg = auth_res.text.lower()
+                if "email not verified" in err_msg or "email_not_verified" in err_msg:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Please verify your email address first."
+                    )
+                print(f"[ProjectHub] Neon sign_in notice/error: {err_msg}")
         except HTTPException:
             raise
         except Exception as e:
-            err_msg = str(e).lower()
-            if "email not confirmed" in err_msg or "email_not_confirmed" in err_msg:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Please verify your email address by clicking the link in the confirmation email first."
-                )
-            print(f"[ProjectHub] Supabase sign_in notice/error: {e}")
+            print(f"[ProjectHub] Neon sign_in exception: {e}")
     
-    if not supabase_auth_ok:
+    if not neon_auth_ok:
         if not user or not verify_password(login_in.password, user.hashed_password):
             record_failed_login(login_in.email)
             ip = get_client_ip(request)
@@ -392,21 +381,25 @@ def login_form(request: Request, form_data: OAuth2PasswordRequestForm = Depends(
     check_rate_limit(form_data.username)
     
     user = db.query(User).filter(User.email == form_data.username).first()
-    supabase_auth_ok = False
-    supabase = get_supabase()
-    if supabase:
+    neon_auth_ok = False
+    neon_url = get_neon_auth_url()
+    if neon_url:
         try:
-            auth_res = supabase.auth.sign_in_with_password({
-                "email": form_data.username,
-                "password": form_data.password
-            })
-            if auth_res and auth_res.user:
-                supabase_auth_ok = True
-                print(f"[ProjectHub] Supabase login successful for {form_data.username}")
+            auth_res = requests.post(
+                f"{neon_url}/sign-in/email",
+                json={
+                    "email": form_data.username,
+                    "password": form_data.password
+                },
+                timeout=10
+            )
+            if auth_res.status_code == 200:
+                neon_auth_ok = True
+                print(f"[ProjectHub] Neon Auth login successful for {form_data.username}")
         except Exception as e:
-            print(f"[ProjectHub] Supabase sign_in notice/error: {e}")
+            print(f"[ProjectHub] Neon sign_in notice/error: {e}")
     
-    if not supabase_auth_ok:
+    if not neon_auth_ok:
         if not user or not verify_password(form_data.password, user.hashed_password):
             record_failed_login(form_data.username)
             ip = get_client_ip(request)
@@ -501,23 +494,25 @@ def refresh_token_endpoint(req: schemas.TokenRefreshRequest, db: Session = Depen
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 def forgot_password(req: schemas.PasswordResetRequest, request: Request, db: Session = Depends(get_db)):
-    """Triggers a password reset link sent via Supabase Auth email sender."""
+    """Triggers a password reset link sent via Neon Auth email sender."""
     validate_corporate_domain(req.email)
-    supabase = get_supabase()
-    if not supabase:
+    neon_url = get_neon_auth_url()
+    if not neon_url:
         raise HTTPException(
             status_code=500,
-            detail="Supabase Auth is not configured. Cannot send password reset email."
+            detail="Neon Auth is not configured. Cannot send password reset email."
         )
     try:
         origin = request.headers.get("origin") or "http://localhost:8000"
-        supabase.auth.reset_password_email(
-            req.email,
-            options={
-                "redirect_to": f"{origin}/?recovery=true"
-            }
+        res = requests.post(
+            f"{neon_url}/request-password-reset",
+            json={
+                "email": req.email,
+                "redirectTo": f"{origin}/?recovery=true"
+            },
+            timeout=10
         )
-        print(f"[ProjectHub] Password reset email sent via Supabase Auth: {req.email}")
+        print(f"[ProjectHub] Password reset email sent via Neon Auth: {req.email} - {res.status_code}")
         ip = get_client_ip(request)
         log_activity(db, None, "password_reset_request", f"Password reset requested for {req.email} [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
         return {"detail": "If an account exists with this email, a password reset link has been sent to your inbox."}
@@ -532,48 +527,32 @@ def forgot_password(req: schemas.PasswordResetRequest, request: Request, db: Ses
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 def reset_password(req: schemas.PasswordResetConfirm, request: Request, db: Session = Depends(get_db)):
-    """Confirms a password reset using the token returned by Supabase Auth and updates local password hash."""
+    """Confirms a password reset using the token and updates local password hash."""
     if len(req.new_password) < 6:
         raise HTTPException(
             status_code=400,
             detail="Password must be at least 6 characters long."
         )
-    supabase = get_supabase()
-    if not supabase:
+    neon_url = get_neon_auth_url()
+    if not neon_url:
         raise HTTPException(
             status_code=500,
-            detail="Supabase Auth is not configured."
+            detail="Neon Auth is not configured."
         )
     try:
-        # Establish user identity from the access token
-        user_res = supabase.auth.get_user(req.access_token)
-        if not user_res or not user_res.user:
+        # For Better Auth, we assume req.access_token contains the reset token sent in the URL
+        res = requests.post(
+            f"{neon_url}/reset-password",
+            json={
+                "newPassword": req.new_password,
+                "token": req.access_token
+            },
+            timeout=10
+        )
+        if res.status_code >= 400:
             raise HTTPException(status_code=400, detail="Invalid or expired password reset token.")
         
-        email = user_res.user.email
-        validate_corporate_domain(email)
-        
-        # Update user password in Supabase
-        if req.refresh_token:
-            supabase.auth.set_session(req.access_token, req.refresh_token)
-            supabase.auth.update_user({"password": req.new_password})
-        else:
-            try:
-                supabase.auth.admin.update_user_by_id(user_res.user.id, {"password": req.new_password})
-            except Exception:
-                supabase.auth.update_user({"password": req.new_password})
-                
-        # Now update our local database password hash so local login fallback works seamlessly
-        local_user = db.query(User).filter(User.email == email).first()
-        ip = get_client_ip(request)
-        if local_user:
-            local_user.hashed_password = get_password_hash(req.new_password)
-            db.commit()
-            log_activity(db, local_user.id, "password_reset", f"User successfully reset password: {local_user.full_name} ({email}) [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
-        else:
-            log_activity(db, None, "password_reset", f"Password reset confirmed for {email} [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
-            
-        print(f"[ProjectHub] Password reset successfully for {email}")
+        print(f"[ProjectHub] Password reset successfully via Neon Auth")
         return {"detail": "Password has been reset successfully. You can now log in with your new password."}
     except Exception as e:
         err_msg = str(e)

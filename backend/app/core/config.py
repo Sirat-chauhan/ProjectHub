@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # Supabase Cloud Storage (Optional)
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
+    NEON_AUTH_URL: Optional[str] = None
     
     # JWT Auth Configuration
     SECRET_KEY: str

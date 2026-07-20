@@ -14,7 +14,7 @@ const state = {
     chatSessions: {}, // key: projectId, value: array of {role: "user"|"assistant", content: string}
     stories: [],
     activeGenerations: {}, // Track document ID -> boolean for active story generations
-    activeProjectTab: "milestones"
+    activeProjectTab: localStorage.getItem("activeProjectTab") || "milestones"
 };
 
 function updateSidebarProjectsLink() {
@@ -29,6 +29,104 @@ function updateSidebarProjectsLink() {
 
 // API Base configuration
 const API_BASE = "";
+
+// Professional inline text box for Custom Roles
+window.promptCustomRole = function(selectObj, callback) {
+    if (selectObj.value === 'custom_add_new') {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = selectObj.className;
+        input.style.cssText = selectObj.style.cssText;
+        input.style.width = '100%';
+        input.placeholder = "Type role & press Enter...";
+        
+        let completed = false;
+        const completeInput = () => {
+            if (completed) return;
+            completed = true;
+            const val = input.value.trim();
+            if (val) {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.text = val;
+                opt.setAttribute('data-custom', 'true');
+                selectObj.add(opt, selectObj.options[selectObj.options.length - 2]); // Insert before separator
+                selectObj.value = val;
+            } else {
+                selectObj.selectedIndex = 0;
+            }
+            input.replaceWith(selectObj);
+            if (val && callback) callback();
+        };
+        
+        input.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                completeInput();
+            } else if (e.key === 'Escape') {
+                completed = true;
+                selectObj.selectedIndex = 0;
+                input.replaceWith(selectObj);
+            }
+        };
+        input.onblur = completeInput;
+        
+        selectObj.replaceWith(input);
+        input.focus();
+    } else if (selectObj.value === 'custom_remove_role') {
+        const customOpts = Array.from(selectObj.options).filter(o => 
+            o.getAttribute('data-custom') === 'true' || 
+            (!['Frontend','Backend','AI','QA','Manager','custom_add_new','custom_remove_role',''].includes(o.value) && !o.disabled)
+        );
+        
+        if (customOpts.length === 0) {
+            alert("No custom roles to remove.");
+            selectObj.selectedIndex = 0;
+            return;
+        }
+
+        const input = document.createElement('select');
+        input.className = selectObj.className;
+        input.style.cssText = selectObj.style.cssText;
+        input.style.width = '100%';
+        
+        const defaultOpt = document.createElement('option');
+        defaultOpt.text = "Select role to remove...";
+        defaultOpt.value = "";
+        input.add(defaultOpt);
+        
+        customOpts.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.value;
+            opt.text = o.text;
+            input.add(opt);
+        });
+
+        input.onchange = function() {
+            const val = input.value;
+            if (val) {
+                for (let i = 0; i < selectObj.options.length; i++) {
+                    if (selectObj.options[i].value === val) {
+                        selectObj.remove(i);
+                        break;
+                    }
+                }
+            }
+            selectObj.selectedIndex = 0;
+            input.replaceWith(selectObj);
+        };
+
+        input.onblur = function() {
+            if (input.parentNode) {
+                selectObj.selectedIndex = 0;
+                input.replaceWith(selectObj);
+            }
+        };
+
+        selectObj.replaceWith(input);
+        input.focus();
+    }
+};
 
 // =====================================================================
 // Global Token Refresh Interceptor
@@ -963,6 +1061,7 @@ function bindProjectEvents() {
 
     tabDocs.addEventListener("click", () => {
         state.activeProjectTab = "documents";
+        localStorage.setItem("activeProjectTab", "documents");
         tabDocs.classList.add("active");
         tabMilestones.classList.remove("active");
         tabTeam.classList.remove("active");
@@ -974,6 +1073,7 @@ function bindProjectEvents() {
     const tabTeam = document.getElementById("tab-team-btn");
     tabTeam.addEventListener("click", () => {
         state.activeProjectTab = "team";
+        localStorage.setItem("activeProjectTab", "team");
         tabTeam.classList.add("active");
         tabMilestones.classList.remove("active");
         tabDocs.classList.remove("active");
@@ -986,6 +1086,7 @@ function bindProjectEvents() {
     // Also update milestones tab click to reset team tab
     tabMilestones.addEventListener("click", () => {
         state.activeProjectTab = "milestones";
+        localStorage.setItem("activeProjectTab", "milestones");
         tabMilestones.classList.add("active");
         tabDocs.classList.remove("active");
         tabTeam.classList.remove("active");
@@ -2755,14 +2856,16 @@ if (storyForm) storyForm.addEventListener("submit", async (e) => {
         for (const line of subtasksList) {
             let role = "Backend";
             let titleText = line;
-            const match = line.match(/^(.*?)\s*\[(Frontend|Backend|AI|Manager)\]\s*$/i);
+            const match = line.match(/^(.*?)\s*\[(.*?)\]\s*$/i);
             if (match) {
                 titleText = match[1].trim();
-                const matchedRole = match[2].toLowerCase();
-                if (matchedRole === "frontend") role = "Frontend";
-                else if (matchedRole === "ai") role = "AI";
-                else if (matchedRole === "manager") role = "Manager";
-                else role = "Backend";
+                const matchedRole = match[2].trim();
+                if (matchedRole.toLowerCase() === "frontend") role = "Frontend";
+                else if (matchedRole.toLowerCase() === "backend") role = "Backend";
+                else if (matchedRole.toLowerCase() === "ai") role = "AI";
+                else if (matchedRole.toLowerCase() === "manager") role = "Manager";
+                else if (matchedRole.toLowerCase() === "qa") role = "QA";
+                else role = matchedRole.charAt(0).toUpperCase() + matchedRole.slice(1);
             }
             if (titleText) {
                 await fetch(`${API_BASE}/api/projects/${projectId}/stories/${createdStory.id}/tasks`, {
@@ -3634,8 +3737,19 @@ function renderStoryDetail(projectId, story) {
     const tasksList = (story.tasks || []).map(t => {
         let badgeBg = "#E0F2FE"; let badgeColor = "#0284C7";
         if (t.task_type === "Frontend") { badgeBg = "#FFEDD5"; badgeColor = "#C2410C"; }
+        else if (t.task_type === "Backend") { badgeBg = "#DBEAFE"; badgeColor = "#1D4ED8"; }
         else if (t.task_type === "AI") { badgeBg = "#DCFCE7"; badgeColor = "#15803D"; }
         else if (t.task_type === "Manager") { badgeBg = "#F3E8FF"; badgeColor = "#7E22CE"; }
+        else if (t.task_type === "QA") { badgeBg = "#FFE4E6"; badgeColor = "#E11D48"; }
+        else {
+            const str = t.task_type || "Task";
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            const hex = '#' + "00000".substring(0, 6 - c.length) + c;
+            badgeBg = hex + "22";
+            badgeColor = hex;
+        }
 
         const membersOptions = (state.projectMembers || []).map(m => `
             <option value="${m.user_id}" ${t.assigned_to === m.user_id ? 'selected' : ''}>${m.user_name}</option>
@@ -3769,11 +3883,15 @@ function renderStoryDetail(projectId, story) {
                     ${isAdmin ? `
                     <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; background: var(--bg-body); border: 1px dashed var(--border-color); padding: 10px 14px; border-radius: 8px; flex-wrap: wrap;">
                         <input type="text" id="new-task-title-${story.id}" placeholder="What needs to be done?" style="flex-grow: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--color-text-main); font-size: 0.9rem;">
-                        <select id="new-task-type-${story.id}" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--color-text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                        <select id="new-task-type-${story.id}" style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--color-text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer;" onchange="if(this.value.startsWith('custom_')) window.promptCustomRole(this);">
                             <option value="Frontend">Frontend</option>
                             <option value="Backend" selected>Backend</option>
                             <option value="AI">AI</option>
+                            <option value="QA">QA</option>
                             <option value="Manager">Manager</option>
+                            <option disabled>──────────</option>
+                            <option value="custom_add_new" style="font-weight: 700; color: #0ea5e9;">+ Add Custom Type...</option>
+                            <option value="custom_remove_role" style="font-weight: 700; color: #ef4444;">- Remove Custom Type...</option>
                         </select>
                         <button type="button" onclick="addStoryTask(${projectId}, ${story.id})" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; cursor: pointer; white-space: nowrap; font-weight: 600;">
                             <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Create Subtask
@@ -4870,6 +4988,13 @@ async function loadTeamMembers(projectId) {
             if (m.role === 'Frontend') roleColor = '#f59e0b';
             else if (m.role === 'AI') roleColor = '#10b981';
             else if (m.role === 'Manager') roleColor = '#8b5cf6';
+            else if (m.role === 'QA') roleColor = '#E11D48';
+            else if (m.role !== 'Backend') {
+                let hash = 0;
+                for (let i = 0; i < m.role.length; i++) hash = m.role.charCodeAt(i) + ((hash << 5) - hash);
+                const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+                roleColor = '#' + "00000".substring(0, 6 - c.length) + c;
+            }
 
             const dateStr = new Date(m.created_at).toLocaleDateString();
             const tr = document.createElement("tr");
@@ -4883,11 +5008,12 @@ async function loadTeamMembers(projectId) {
             let roleHTML = "";
             if (isAdmin) {
                 roleHTML = `
-                    <select onchange="updateMemberRole(${projectId}, ${m.id}, '${m.user_email}', this.value)" style="background: ${roleColor}15; color: ${roleColor}; border: 1px solid ${roleColor}40; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; outline: none; cursor: pointer;">
-                        <option value="Frontend" ${m.role === 'Frontend' ? 'selected' : ''}>Frontend</option>
-                        <option value="Backend" ${m.role === 'Backend' ? 'selected' : ''}>Backend</option>
-                        <option value="AI" ${m.role === 'AI' ? 'selected' : ''}>AI</option>
-                        <option value="Manager" ${m.role === 'Manager' ? 'selected' : ''}>Manager</option>
+                    <select onchange="if(this.value.startsWith('custom_')) { window.promptCustomRole(this, () => { if(this.value.startsWith('custom_')) return; updateMemberRole(${projectId}, ${m.id}, '${m.user_email}', this.value); }); } else { updateMemberRole(${projectId}, ${m.id}, '${m.user_email}', this.value); }" style="background: ${roleColor}15; color: ${roleColor}; border: 1px solid ${roleColor}40; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; outline: none; cursor: pointer;">
+                        <option value="${m.role.replace(/"/g, '&quot;')}" selected>${m.role}</option>
+                        ${['Frontend','Backend','AI','QA','Manager'].filter(x=>x!==m.role).map(x=>`<option value="${x}">${x}</option>`).join('')}
+                        <option disabled>──────────</option>
+                        <option value="custom_add_new" style="font-weight: 700; color: #0ea5e9;">+ Add Custom Role...</option>
+                        <option value="custom_remove_role" style="font-weight: 700; color: #ef4444;">- Remove Custom Role...</option>
                     </select>
                 `;
             } else {
@@ -5132,6 +5258,14 @@ function createMyTaskCard(task) {
     if (task.task_type === 'Frontend') typeColor = '#f59e0b';
     else if (task.task_type === 'AI') typeColor = '#10b981';
     else if (task.task_type === 'Manager') typeColor = '#8b5cf6';
+    else if (task.task_type === 'QA') typeColor = '#E11D48';
+    else if (task.task_type !== 'Backend') {
+        const str = task.task_type || "Task";
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+        typeColor = '#' + "00000".substring(0, 6 - c.length) + c;
+    }
 
     const card = document.createElement('div');
     card.id = `mytask-card-${task.id}`;

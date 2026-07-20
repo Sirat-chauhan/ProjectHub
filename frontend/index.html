@@ -460,11 +460,15 @@
                             </div>
                             <div class="form-group" style="width: 160px; margin-bottom: 0;">
                                 <label for="team-member-role">Role</label>
-                                <select id="team-member-role" class="form-select">
+                                <select id="team-member-role" class="form-select" onchange="if(this.value.startsWith('custom_')) window.promptCustomRole(this);">
                                     <option value="Frontend">Frontend</option>
                                     <option value="Backend">Backend</option>
                                     <option value="AI">AI</option>
+                                    <option value="QA">QA</option>
                                     <option value="Manager">Manager</option>
+                                    <option disabled>──────────</option>
+                                    <option value="custom_add_new" style="font-weight: 700; color: #0ea5e9;">+ Add Custom Role...</option>
+                                    <option value="custom_remove_role" style="font-weight: 700; color: #ef4444;">- Remove Custom Role...</option>
                                 </select>
                             </div>
                             <button class="btn btn-primary btn-sm" id="btn-add-team-member" style="height: 38px;">
@@ -992,8 +996,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="story-subtasks-input">Subtasks (One per line, format: Title [Role] e.g. Setup API [Backend])</label>
-                                <textarea id="story-subtasks-input" rows="2" placeholder="Design UI components [Frontend]&#10;Implement API endpoint [Backend]&#10;Integrate RAG prompt [AI]"></textarea>
-                                <small style="color: var(--color-text-muted); font-size: 11px;">Roles: Frontend, Backend, AI, Manager (defaults to Backend if omitted).</small>
+                                <textarea id="story-subtasks-input" rows="2" placeholder="Design UI components [Frontend]&#10;Implement API endpoint [Backend]&#10;Integrate RAG prompt [AI]&#10;Test the flow [QA]&#10;Configure server [DevOps]"></textarea>
+                                <small style="color: var(--color-text-muted); font-size: 11px;">Roles: Frontend, Backend, AI, QA, Manager, or any custom role (defaults to Backend if omitted).</small>
                             </div>
                             <div class="form-group" style="display: flex; gap: 15px;">
                                 <div style="flex: 1;">
@@ -1130,11 +1134,15 @@
                     </div>
                     <div style="width: 140px;">
                         <label for="invite-role-select">Role</label>
-                        <select id="invite-role-select" class="form-select" style="width: 100%;">
+                        <select id="invite-role-select" class="form-select" style="width: 100%;" onchange="if(this.value.startsWith('custom_')) window.promptCustomRole(this);">
                             <option value="Frontend">Frontend</option>
                             <option value="Backend">Backend</option>
                             <option value="AI">AI</option>
+                            <option value="QA">QA</option>
                             <option value="Manager">Manager</option>
+                            <option disabled>──────────</option>
+                            <option value="custom_add_new" style="font-weight: 700; color: #0ea5e9;">+ Add Custom Role...</option>
+                            <option value="custom_remove_role" style="font-weight: 700; color: #ef4444;">- Remove Custom Role...</option>
                         </select>
                     </div>
                 </div>
