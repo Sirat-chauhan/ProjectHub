@@ -831,7 +831,8 @@ function renderDashboardTimeline(logs) {
         if (log.action.startsWith("create") || log.action.startsWith("register")) markerClass = "action-create";
         if (log.action.startsWith("delete")) markerClass = "action-delete";
 
-        const formattedTime = new Date(log.created_at).toLocaleString();
+        const utcTime = log.created_at.endsWith("Z") ? log.created_at : log.created_at + "Z";
+        const formattedTime = new Date(utcTime).toLocaleString();
 
         item.innerHTML = `
             <div class="timeline-marker">
@@ -2504,7 +2505,9 @@ async function loadActivityLogs() {
         }
 
         logs.forEach(log => {
-            const dateStr = new Date(log.created_at).toLocaleString();
+            // Append 'Z' to ensure JS parses the timestamp as UTC, then converts to local timezone
+            const utcDateStr = log.created_at.endsWith("Z") ? log.created_at : log.created_at + "Z";
+            const dateStr = new Date(utcDateStr).toLocaleString();
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -2913,6 +2916,14 @@ if (editProfileForm) {
 
             showToast("Profile updated successfully", "success");
             editProfileModal.classList.remove("active");
+
+            // Reload active section so name updates propagate to UI lists immediately
+            if (state.activeSection === "dashboard") loadDashboardStats();
+            else if (state.activeSection === "projects") loadProjects();
+            else if (state.activeSection === "stories") loadStories();
+            else if (state.activeSection === "mytasks") loadMyTasks();
+            else if (state.activeSection === "logs") loadActivityLogs();
+            else if (state.activeSection === "milestones") loadMilestonesRoadmap();
         } catch (e) {
             showToast(e.message, "error");
         } finally {
@@ -4270,6 +4281,7 @@ function renderStoriesListView(storiesList, projectId) {
     const isProjManager = selectedProj && (selectedProj.user_role === 'Manager' || selectedProj.user_role === 'Admin');
     const isAdmin = isGlobalAdmin || isProjManager;
     const members = state.projectMembers || [];
+    const currentUserName = state.user?.full_name || "Unassigned";
 
     storiesList.forEach(story => {
         const storyKey = formatStoryKey(story, projectId);
@@ -4333,9 +4345,11 @@ function renderStoriesListView(storiesList, projectId) {
                 <!-- Work (Expand Hierarchy + Key + Title) -->
                 <td style="padding: 10px 14px; min-width: 280px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
+                        ${hasChildren ? `
                         <button type="button" onclick="toggleJiraListHierarchy('${story.id}', '${projectId}')" title="${isCollapsed ? 'Expand hierarchy' : 'Collapse hierarchy'}" style="width: 20px; height: 20px; border-radius: 4px; border: none; background: transparent; color: var(--color-text-muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                             <i data-lucide="${isCollapsed ? 'chevron-right' : 'chevron-down'}" style="width: 14px; height: 14px;"></i>
                         </button>
+                        ` : `<div style="width: 20px; height: 20px; display: inline-flex;"></div>`}
                         <span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #EDE9FE; color: #7C3AED; border-radius: 3px;" title="Epic / Story">
                             <i data-lucide="zap" style="width: 12px; height: 12px; fill: currentColor;"></i>
                         </span>
@@ -5426,7 +5440,8 @@ async function loadNotifications() {
         }
 
         notifs.forEach(n => {
-            const dateStr = new Date(n.created_at).toLocaleString();
+            const utcNotifTime = n.created_at.endsWith("Z") ? n.created_at : n.created_at + "Z";
+            const dateStr = new Date(utcNotifTime).toLocaleString();
             const div = document.createElement("div");
             div.className = `notif-item ${n.is_read ? 'read' : 'unread'}`;
 
