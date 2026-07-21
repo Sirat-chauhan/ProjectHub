@@ -30,6 +30,77 @@ function updateSidebarProjectsLink() {
 // API Base configuration
 const API_BASE = "";
 
+// =====================================================================
+// Generic Professional Confirmation Modal Helper
+// =====================================================================
+let pendingConfirmCallback = null;
+
+window.showConfirmModal = function(title, message, confirmText, confirmCallback, intent = 'primary') {
+    const modal = document.getElementById("generic-confirm-modal");
+    if (!modal) {
+        // Fallback to native
+        if (confirm(message)) confirmCallback();
+        return;
+    }
+
+    document.getElementById("generic-confirm-title").textContent = title;
+    // We use innerHTML to allow basic bolding/formatting in the prompt
+    document.getElementById("generic-confirm-message").innerHTML = message;
+    
+    const submitBtn = document.getElementById("btn-generic-confirm-submit");
+    submitBtn.textContent = confirmText;
+    
+    const iconWrapper = document.getElementById("generic-confirm-icon-wrapper");
+    const icon = document.getElementById("generic-confirm-icon");
+    
+    // Reset classes
+    submitBtn.className = "btn";
+    
+    if (intent === 'danger') {
+        submitBtn.classList.add("btn-danger");
+        iconWrapper.style.background = "#fef2f2";
+        iconWrapper.style.color = "#ef4444";
+        icon.setAttribute("data-lucide", "alert-triangle");
+    } else if (intent === 'warning') {
+        submitBtn.classList.add("btn-warning");
+        submitBtn.style.background = "#f59e0b";
+        submitBtn.style.color = "#fff";
+        iconWrapper.style.background = "#fffbeb";
+        iconWrapper.style.color = "#f59e0b";
+        icon.setAttribute("data-lucide", "alert-circle");
+    } else {
+        submitBtn.classList.add("btn-primary");
+        iconWrapper.style.background = "#eff6ff";
+        iconWrapper.style.color = "#3b82f6";
+        icon.setAttribute("data-lucide", "info");
+    }
+    
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons({nodes: [modal]});
+    
+    pendingConfirmCallback = confirmCallback;
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("active"), 10);
+};
+
+window.closeGenericConfirmModal = function() {
+    const modal = document.getElementById("generic-confirm-modal");
+    if (modal) {
+        modal.classList.remove("active");
+        setTimeout(() => { modal.style.display = "none"; }, 200);
+    }
+    pendingConfirmCallback = null;
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    const submitBtn = document.getElementById("btn-generic-confirm-submit");
+    if (submitBtn) {
+        submitBtn.addEventListener("click", () => {
+            if (pendingConfirmCallback) pendingConfirmCallback();
+            closeGenericConfirmModal();
+        });
+    }
+});
+
 // Professional inline text box for Custom Roles
 window.promptCustomRole = function(selectObj, callback) {
     if (selectObj.value === 'custom_add_new') {
@@ -752,10 +823,10 @@ function applyRBACUI() {
         teamControls.style.display = hasManagerPrivileges ? "flex" : "none";
     }
 
-    // Hide delete project button for non-admin/non-manager users
+    // Delete project button is visible for project management
     const deleteProjectBtn = document.getElementById("btn-delete-project");
     if (deleteProjectBtn) {
-        deleteProjectBtn.style.display = hasManagerPrivileges ? "inline-flex" : "none";
+        deleteProjectBtn.style.display = "inline-flex";
     }
 
     // "New Project" button is visible to all logged-in users
@@ -866,9 +937,10 @@ async function loadDashboardStats() {
         let totalDocs = 0;
         let totalMilestones = 0;
 
+        const projectsCard = document.getElementById("stat-card-projects");
         if (selectedProjId) {
-            // Scoped: show stats only for the selected project
-            document.getElementById("stat-projects").textContent = "1";
+            // Scoped: show stats only for the selected project, hide Total Projects card
+            if (projectsCard) projectsCard.style.display = "none";
 
             const [mRes, docsRes] = await Promise.all([
                 fetch(`${API_BASE}/api/milestones/project/${selectedProjId}`, { headers: { "Authorization": `Bearer ${state.token}` } }),
@@ -877,8 +949,10 @@ async function loadDashboardStats() {
             if (mRes.ok) totalMilestones = (await mRes.json()).length;
             if (docsRes.ok) totalDocs = (await docsRes.json()).length;
         } else {
-            // No project selected: aggregate across all projects
-            document.getElementById("stat-projects").textContent = projs.length;
+            // No project selected: show Total Projects card and aggregate stats
+            if (projectsCard) projectsCard.style.display = "flex";
+            const statProjEl = document.getElementById("stat-projects");
+            if (statProjEl) statProjEl.textContent = projs.length;
 
             const promises = [];
             for (let p of projs.slice(0, 5)) {
@@ -1000,141 +1074,139 @@ function bindProjectEvents() {
     // Detail Panel Back Button
     const btnBack = document.getElementById("btn-back-to-projects");
 
-    btnOpen.addEventListener("click", () => {
-        if (!checkAdminAccess("create new projects")) return;
-        modal.classList.add("active");
-    });
-    btnClose.addEventListener("click", () => modal.classList.remove("active"));
-    btnCancel.addEventListener("click", () => modal.classList.remove("active"));
+    if (btnOpen) {
+        btnOpen.addEventListener("click", () => {
+            if (!checkAdminAccess("create new projects")) return;
+            if (modal) modal.classList.add("active");
+        });
+    }
+    if (btnClose) btnClose.addEventListener("click", () => modal && modal.classList.remove("active"));
+    if (btnCancel) btnCancel.addEventListener("click", () => modal && modal.classList.remove("active"));
 
-    btnBack.addEventListener("click", () => {
-        state.currentProject = null;
-        window.location.hash = "#projects";
-    });
+    if (btnBack) {
+        btnBack.addEventListener("click", () => {
+            state.currentProject = null;
+            window.location.hash = "#projects";
+        });
+    }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!checkAdminAccess("create new projects")) return;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn && submitBtn.disabled) return;
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!checkAdminAccess("create new projects")) return;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.disabled) return;
 
-        const name = document.getElementById("project-name").value;
-        const description = document.getElementById("project-desc").value;
+            const name = document.getElementById("project-name")?.value;
+            const description = document.getElementById("project-desc")?.value;
 
-        const origBtnText = submitBtn ? submitBtn.innerHTML : "Create Project";
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i data-lucide="loader" style="width: 14px; height: 14px;"></i> Creating...';
-            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-        }
-
-        try {
-            const response = await fetch(`${API_BASE}/api/projects`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${state.token}`
-                },
-                body: JSON.stringify({ name, description })
-            });
-
-            if (!response.ok) throw new Error("Could not create project.");
-
-            showToast("Project created successfully!", "success");
-            form.reset();
-            modal.classList.remove("active");
-            loadProjects();
-            loadWorkspaceData(); // Refresh counts
-        } catch (e) {
-            showToast(e.message, "error");
-        } finally {
+            const origBtnText = submitBtn ? submitBtn.innerHTML : "Create Project";
             if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = origBtnText;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader" style="width: 14px; height: 14px;"></i> Creating...';
+                if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
             }
-        }
-    });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/projects`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({ name, description })
+                });
+
+                if (!response.ok) throw new Error("Could not create project.");
+
+                showToast("Project created successfully!", "success");
+                form.reset();
+                if (modal) modal.classList.remove("active");
+                loadProjects();
+                loadWorkspaceData(); // Refresh counts
+            } catch (e) {
+                showToast(e.message, "error");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origBtnText;
+                }
+            }
+        });
+    }
 
     // Detail Tab Buttons (Milestones, Documents, Team) handled below
     const tabMilestones = document.getElementById("tab-milestones-btn");
     const tabDocs = document.getElementById("tab-documents-btn");
-
-    tabDocs.addEventListener("click", () => {
-        state.activeProjectTab = "documents";
-        localStorage.setItem("activeProjectTab", "documents");
-        tabDocs.classList.add("active");
-        tabMilestones.classList.remove("active");
-        tabTeam.classList.remove("active");
-        document.getElementById("detail-tab-documents").classList.add("active");
-        document.getElementById("detail-tab-milestones").classList.remove("active");
-        document.getElementById("detail-tab-team").classList.remove("active");
-    });
-
     const tabTeam = document.getElementById("tab-team-btn");
-    tabTeam.addEventListener("click", () => {
-        state.activeProjectTab = "team";
-        localStorage.setItem("activeProjectTab", "team");
-        tabTeam.classList.add("active");
-        tabMilestones.classList.remove("active");
-        tabDocs.classList.remove("active");
-        document.getElementById("detail-tab-team").classList.add("active");
-        document.getElementById("detail-tab-milestones").classList.remove("active");
-        document.getElementById("detail-tab-documents").classList.remove("active");
-        if (state.currentProject) loadTeamMembers(state.currentProject.id);
-    });
 
-    // Also update milestones tab click to reset team tab
-    tabMilestones.addEventListener("click", () => {
-        state.activeProjectTab = "milestones";
-        localStorage.setItem("activeProjectTab", "milestones");
-        tabMilestones.classList.add("active");
-        tabDocs.classList.remove("active");
-        tabTeam.classList.remove("active");
-        document.getElementById("detail-tab-milestones").classList.add("active");
-        document.getElementById("detail-tab-documents").classList.remove("active");
-        document.getElementById("detail-tab-team").classList.remove("active");
-    });
+    if (tabDocs) {
+        tabDocs.addEventListener("click", () => {
+            state.activeProjectTab = "documents";
+            localStorage.setItem("activeProjectTab", "documents");
+            tabDocs.classList.add("active");
+            if (tabMilestones) tabMilestones.classList.remove("active");
+            if (tabTeam) tabTeam.classList.remove("active");
+            document.getElementById("detail-tab-documents")?.classList.add("active");
+            document.getElementById("detail-tab-milestones")?.classList.remove("active");
+            document.getElementById("detail-tab-team")?.classList.remove("active");
+        });
+    }
+
+    if (tabTeam) {
+        tabTeam.addEventListener("click", () => {
+            state.activeProjectTab = "team";
+            localStorage.setItem("activeProjectTab", "team");
+            tabTeam.classList.add("active");
+            if (tabMilestones) tabMilestones.classList.remove("active");
+            if (tabDocs) tabDocs.classList.remove("active");
+            document.getElementById("detail-tab-team")?.classList.add("active");
+            document.getElementById("detail-tab-milestones")?.classList.remove("active");
+            document.getElementById("detail-tab-documents")?.classList.remove("active");
+            if (state.currentProject) loadTeamMembers(state.currentProject.id);
+        });
+    }
+
+    if (tabMilestones) {
+        tabMilestones.addEventListener("click", () => {
+            state.activeProjectTab = "milestones";
+            localStorage.setItem("activeProjectTab", "milestones");
+            tabMilestones.classList.add("active");
+            if (tabDocs) tabDocs.classList.remove("active");
+            if (tabTeam) tabTeam.classList.remove("active");
+            document.getElementById("detail-tab-milestones")?.classList.add("active");
+            document.getElementById("detail-tab-documents")?.classList.remove("active");
+            document.getElementById("detail-tab-team")?.classList.remove("active");
+        });
+    }
 
     // Add Direct shortcuts
-    document.getElementById("btn-add-milestone-direct").addEventListener("click", async () => {
-        if (!checkAdminAccess("add milestones")) return;
-        await populateProjectDropdowns();
-        document.getElementById("milestone-project-id").value = state.currentProject.id;
-        window.location.hash = "#milestones";
-        document.getElementById("create-milestone-modal").classList.add("active");
-    });
+    const btnAddMilestonesDirect = document.getElementById("btn-add-milestone-direct");
+    if (btnAddMilestonesDirect) {
+        btnAddMilestonesDirect.addEventListener("click", async () => {
+            if (!checkAdminAccess("add milestones")) return;
+            await populateProjectDropdowns();
+            const elId = document.getElementById("milestone-project-id");
+            if (elId && state.currentProject) elId.value = state.currentProject.id;
+            window.location.hash = "#milestones";
+            document.getElementById("create-milestone-modal")?.classList.add("active");
+        });
+    }
 
-    document.getElementById("btn-add-document-direct").addEventListener("click", () => {
-        if (!checkAdminAccess("upload documents")) return;
-        document.getElementById("upload-project-id").value = state.currentProject.id;
-        triggerProjectChangeInUpload();
-        window.location.hash = "#uploads";
-    });
+    const btnAddDocDirect = document.getElementById("btn-add-document-direct");
+    if (btnAddDocDirect) {
+        btnAddDocDirect.addEventListener("click", () => {
+            if (!checkAdminAccess("upload documents")) return;
+            const elId = document.getElementById("upload-project-id");
+            if (elId && state.currentProject) elId.value = state.currentProject.id;
+            triggerProjectChangeInUpload();
+            window.location.hash = "#uploads";
+        });
+    }
 
-    document.getElementById("btn-delete-project").addEventListener("click", async () => {
-        if (!checkAdminAccess("delete projects")) return;
-        if (!state.currentProject) return;
-        const confirmDelete = confirm(`Are you absolutely sure you want to delete project '${state.currentProject.name}'? All files, milestones, and vector store indices will be permanently removed!`);
-        if (!confirmDelete) return;
-
-        try {
-            const res = await fetch(`${API_BASE}/api/projects/${state.currentProject.id}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${state.token}` }
-            });
-
-            if (!res.ok) throw new Error("Failed to delete project.");
-
-            showToast("Project and all associated file vectors deleted successfully.");
-            state.currentProject = null;
-            window.location.hash = "#projects";
-            loadProjects();
-            loadWorkspaceData();
-        } catch (e) {
-            showToast(e.message, "error");
-        }
-    });
+    // Delete project modal is now handled by standalone inline script in index.html
 }
+
 
 async function loadProjects() {
     if (!state.token) return;
@@ -1410,73 +1482,85 @@ window.toggleMilestoneStatus = async function (milestoneId, newStatus, triggerBt
 
 window.deleteMilestoneDirect = async function (milestoneId, triggerBtn) {
     if (!checkAdminAccess("delete milestones")) return;
-    const confirmDel = confirm("Delete milestone? Associated documents will not be deleted but will be detached.");
-    if (!confirmDel) return;
+    
+    showConfirmModal(
+        "Delete Milestone?",
+        "Associated documents will not be deleted but will be detached.",
+        "Delete Milestone",
+        async () => {
+            // --- Optimistic UI: remove the card instantly ---
+            const card = triggerBtn ? triggerBtn.closest(".timeline-card") : null;
+            if (card) {
+                card.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+                card.style.opacity = "0";
+                card.style.transform = "translateX(-8px)";
+                setTimeout(() => card.remove(), 200);
+            }
 
-    // --- Optimistic UI: remove the card instantly ---
-    const card = triggerBtn ? triggerBtn.closest(".timeline-card") : null;
-    if (card) {
-        card.style.transition = "opacity 0.2s ease, transform 0.2s ease";
-        card.style.opacity = "0";
-        card.style.transform = "translateX(-8px)";
-        setTimeout(() => card.remove(), 200);
-    }
-
-    try {
-        const res = await fetch(`${API_BASE}/api/milestones/${milestoneId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        if (!res.ok) throw new Error("Failed to delete milestone");
-        showToast("Milestone deleted.");
-        if (state.currentProject) {
-            loadProjectDetailMilestones(state.currentProject.id);
-        } else {
-            loadMilestonesRoadmap();
-        }
-        loadWorkspaceData();
-    } catch (e) {
-        showToast(e.message, "error");
-        // On failure re-render to restore the card
-        if (state.currentProject) {
-            loadProjectDetailMilestones(state.currentProject.id);
-        } else {
-            loadMilestonesRoadmap();
-        }
-    }
+            try {
+                const res = await fetch(`${API_BASE}/api/milestones/${milestoneId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+                if (!res.ok) throw new Error("Failed to delete milestone");
+                showToast("Milestone deleted.");
+                if (state.currentProject) {
+                    loadProjectDetailMilestones(state.currentProject.id);
+                } else {
+                    loadMilestonesRoadmap();
+                }
+                loadWorkspaceData();
+            } catch (e) {
+                showToast(e.message, "error");
+                // On failure re-render to restore the card
+                if (state.currentProject) {
+                    loadProjectDetailMilestones(state.currentProject.id);
+                } else {
+                    loadMilestonesRoadmap();
+                }
+            }
+        },
+        "danger"
+    );
 };
 
 window.deleteDocumentDirect = async function (documentId, triggerBtn) {
     if (!checkAdminAccess("delete documents")) return;
-    const confirmDel = confirm("Delete document? This will remove the file from local storage and purge its semantic vectors from pgvector!");
-    if (!confirmDel) return;
+    
+    showConfirmModal(
+        "Delete Document?",
+        "This will remove the file from local storage and purge its semantic vectors from pgvector!",
+        "Delete Document",
+        async () => {
+            // Optimistic UI: fade-out the table row immediately
+            const row = triggerBtn ? triggerBtn.closest("tr") : null;
+            if (row) {
+                row.style.transition = "opacity 0.2s ease";
+                row.style.opacity = "0";
+                setTimeout(() => row.remove(), 200);
+            }
 
-    // Optimistic UI: fade-out the table row immediately
-    const row = triggerBtn ? triggerBtn.closest("tr") : null;
-    if (row) {
-        row.style.transition = "opacity 0.2s ease";
-        row.style.opacity = "0";
-        setTimeout(() => row.remove(), 200);
-    }
-
-    try {
-        const res = await fetch(`${API_BASE}/api/documents/${documentId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        if (!res.ok) throw new Error("Failed to delete document.");
-        showToast("File and vectors purged.");
-        if (state.currentProject) {
-            loadProjectDetailDocuments(state.currentProject.id);
-        }
-        loadWorkspaceData();
-    } catch (e) {
-        showToast(e.message, "error");
-        // Restore by re-loading on failure
-        if (state.currentProject) {
-            loadProjectDetailDocuments(state.currentProject.id);
-        }
-    }
+            try {
+                const res = await fetch(`${API_BASE}/api/documents/${documentId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+                if (!res.ok) throw new Error("Failed to delete document.");
+                showToast("File and vectors purged.");
+                if (state.currentProject) {
+                    loadProjectDetailDocuments(state.currentProject.id);
+                }
+                loadWorkspaceData();
+            } catch (e) {
+                showToast(e.message, "error");
+                // Restore by re-loading on failure
+                if (state.currentProject) {
+                    loadProjectDetailDocuments(state.currentProject.id);
+                }
+            }
+        },
+        "danger"
+    );
 };
 
 // ─── Document Action Dropdown Helpers ─────────────────────────────────────────
@@ -1509,87 +1593,98 @@ document.addEventListener("click", function (e) {
 window.generateStoriesFromDocument = async function (projectId, documentId, docName) {
     if (!checkAdminAccess("generate user stories")) return;
 
-    const confirmed = confirm(`Generate User Stories from "${docName}"?\n\nAI will analyse this document and create Agile user stories. Any duplicate stories will be skipped automatically.`);
-    if (!confirmed) return;
+    showConfirmModal(
+        "Generate User Stories?",
+        `AI will analyse <strong>"${docName}"</strong> and create Agile user stories.<br><br><small>Any duplicate stories will be skipped automatically.</small>`,
+        "Generate Stories",
+        async () => {
+            if (!state.activeGenerations) state.activeGenerations = {};
+            state.activeGenerations[documentId] = true;
 
-    if (!state.activeGenerations) state.activeGenerations = {};
-    state.activeGenerations[documentId] = true;
-
-    const btn = document.getElementById(`btn-gen-stories-${documentId}`);
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> Generating...';
-        if (window.lucide) lucide.createIcons();
-    }
-
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate-from-document`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${state.token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ document_id: documentId })
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            showToast(data.message || `Stories generated from "${docName}"`, "success");
-
-            // If the user is currently on the User Stories section viewing this project, auto-reload stories list!
-            const storyProjSelect = document.getElementById("story-project-select");
-            if (state.activeSection === "stories" && storyProjSelect && parseInt(storyProjSelect.value) === projectId) {
-                loadStories();
+            const btn = document.getElementById(`btn-gen-stories-${documentId}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> Generating...';
+                if (window.lucide) lucide.createIcons();
             }
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to generate stories", "error");
-        }
-    } catch (e) {
-        showToast(`Network error: ${e.message}`, "error");
-    } finally {
-        if (state.activeGenerations) {
-            delete state.activeGenerations[documentId];
-        }
 
-        // Re-render documents list if we are still viewing this project detail page, to restore/update button state
-        if (state.activeSection === "projects" && state.currentProject && state.currentProject.id === projectId) {
-            loadProjectDetailDocuments(projectId);
-        } else if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Stories';
-            if (window.lucide) lucide.createIcons();
-        }
-    }
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate-from-document`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${state.token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ document_id: documentId })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || `Stories generated from "${docName}"`, "success");
+
+                    // If the user is currently on the User Stories section viewing this project, auto-reload stories list!
+                    const storyProjSelect = document.getElementById("story-project-select");
+                    if (state.activeSection === "stories" && storyProjSelect && parseInt(storyProjSelect.value) === projectId) {
+                        loadStories();
+                    }
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || "Failed to generate stories", "error");
+                }
+            } catch (e) {
+                showToast(`Network error: ${e.message}`, "error");
+            } finally {
+                if (state.activeGenerations) {
+                    delete state.activeGenerations[documentId];
+                }
+
+                // Re-render documents list if we are still viewing this project detail page, to restore/update button state
+                if (state.activeSection === "projects" && state.currentProject && state.currentProject.id === projectId) {
+                    loadProjectDetailDocuments(projectId);
+                } else if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Stories';
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        },
+        "primary"
+    );
 };
 
 window.regenerateStoriesFromDocument = async function (projectId, documentId, docName) {
     if (!checkAdminAccess("regenerate user stories")) return;
-    const confirmed = confirm(`Regenerate stories from "${docName}"?\n\nNew stories will be added. Existing stories are kept but duplicates will be skipped automatically.`);
-    if (!confirmed) return;
+    
+    showConfirmModal(
+        "Regenerate User Stories?",
+        `Are you sure you want to regenerate stories from <strong>"${docName}"</strong>?<br><br><small>New stories will be added. Existing stories are kept but duplicates will be skipped automatically.</small>`,
+        "Regenerate",
+        async () => {
+            showToast(`Regenerating stories from "${docName}"...`, "info");
 
-    showToast(`Regenerating stories from "${docName}"...`, "info");
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate-from-document`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${state.token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ document_id: documentId })
+                });
 
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate-from-document`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${state.token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ document_id: documentId })
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            showToast(data.message || `Stories regenerated from "${docName}"`, "success");
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to regenerate stories", "error");
-        }
-    } catch (e) {
-        showToast(`Network error: ${e.message}`, "error");
-    }
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || `Stories regenerated from "${docName}"`, "success");
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || "Failed to regenerate stories", "error");
+                }
+            } catch (e) {
+                showToast(`Network error: ${e.message}`, "error");
+            }
+        },
+        "warning"
+    );
 };
 
 window.downloadDocumentSecurely = async function (documentId, fileName) {
@@ -2781,20 +2876,73 @@ document.addEventListener("DOMContentLoaded", () => {
 // =====================================================================
 document.getElementById("story-project-select")?.addEventListener("change", loadStories);
 
-// Manual Story Creation
+// Manual Story / Subtask Creation
 const btnOpenStoryModal = document.getElementById("btn-open-create-story-modal");
 const btnCloseStoryModal = document.getElementById("btn-close-story-modal");
 const btnCancelStoryModal = document.getElementById("btn-cancel-story-modal");
 const storyModal = document.getElementById("create-story-modal");
 const storyForm = document.getElementById("create-story-form");
+const issueTypeSelect = document.getElementById("create-issue-type-select");
 
-if (btnOpenStoryModal) btnOpenStoryModal.addEventListener("click", () => {
+function updateIssueTypeFields() {
+    const issueType = issueTypeSelect?.value || "story";
+    const subtaskParentGroup = document.getElementById("subtask-parent-group");
+    const subtaskRoleGroup = document.getElementById("subtask-role-group");
+    const storyOnlyFields = document.querySelectorAll(".story-only-field");
+    const modalTitle = document.getElementById("modal-create-issue-title");
+    const submitBtn = document.getElementById("btn-submit-create-issue");
+
+    if (issueType === "subtask") {
+        if (subtaskParentGroup) subtaskParentGroup.style.display = "block";
+        if (subtaskRoleGroup) subtaskRoleGroup.style.display = "block";
+        storyOnlyFields.forEach(el => el.style.display = "none");
+        if (modalTitle) modalTitle.textContent = "Create Subtask / Task";
+        if (submitBtn) submitBtn.textContent = "Save Subtask";
+    } else {
+        if (subtaskParentGroup) subtaskParentGroup.style.display = "none";
+        if (subtaskRoleGroup) subtaskRoleGroup.style.display = "none";
+        storyOnlyFields.forEach(el => el.style.display = "");
+        if (modalTitle) modalTitle.textContent = "Create User Story";
+        if (submitBtn) submitBtn.textContent = "Save Story";
+    }
+}
+
+if (issueTypeSelect) {
+    issueTypeSelect.addEventListener("change", updateIssueTypeFields);
+}
+
+async function populateParentStorySelect(projectId) {
+    const parentSelect = document.getElementById("subtask-parent-story-select");
+    if (!parentSelect) return;
+    parentSelect.innerHTML = '<option value="">-- Select Parent User Story --</option>';
+    try {
+        const response = await fetch(`${API_BASE}/api/projects/${projectId}/stories`, {
+            headers: { "Authorization": `Bearer ${state.token}` }
+        });
+        if (response.ok) {
+            const stories = await response.json();
+            stories.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = `[ID: ${s.id}] ${s.title}`;
+                parentSelect.appendChild(opt);
+            });
+        }
+    } catch (err) {
+        console.error("Error fetching stories for parent select:", err);
+    }
+}
+
+if (btnOpenStoryModal) btnOpenStoryModal.addEventListener("click", async () => {
     if (!checkAdminAccess("create user stories")) return;
-    const projectId = document.getElementById("story-project-select").value;
+    const projectId = document.getElementById("story-project-select")?.value;
     if (!projectId) {
         showToast("Please select a project first", "error");
         return;
     }
+    await populateParentStorySelect(projectId);
+    if (issueTypeSelect) issueTypeSelect.value = "story";
+    updateIssueTypeFields();
     storyModal.classList.add("active");
 });
 if (btnCloseStoryModal) btnCloseStoryModal.addEventListener("click", () => storyModal.classList.remove("active"));
@@ -2806,87 +2954,123 @@ if (storyForm) storyForm.addEventListener("submit", async (e) => {
     const submitBtn = storyForm.querySelector('button[type="submit"]');
     if (submitBtn && submitBtn.disabled) return;
 
-    const projectId = document.getElementById("story-project-select").value;
+    const projectId = document.getElementById("story-project-select")?.value;
     if (!projectId) return;
 
-    const origBtnText = submitBtn ? submitBtn.innerHTML : "Create Story";
+    const issueType = issueTypeSelect?.value || "story";
+    const origBtnText = submitBtn ? submitBtn.innerHTML : "Save";
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i data-lucide="loader" style="width: 14px; height: 14px;"></i> Creating...';
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
 
-    const title = document.getElementById("story-title-input").value;
-    const desc = document.getElementById("story-desc-input").value;
-    const priority = document.getElementById("story-priority-input").value;
-    const points = parseInt(document.getElementById("story-points-input").value);
-
-    const acRaw = document.getElementById("story-ac-input")?.value || "";
-    const acList = acRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-
-    const subtasksRaw = document.getElementById("story-subtasks-input")?.value || "";
-    const subtasksList = subtasksRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-
     try {
-        const response = await fetch(`${API_BASE}/api/projects/${projectId}/stories`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${state.token}`
-            },
-            body: JSON.stringify({
-                title: title,
-                description: desc,
-                acceptance_criteria: acList,
-                priority: priority,
-                story_points: points,
-                status: "To Do",
-                comments: []
-            })
-        });
+        if (issueType === "subtask") {
+            const parentStoryId = document.getElementById("subtask-parent-story-select")?.value;
+            if (!parentStoryId) {
+                showToast("Please select a parent user story for this subtask", "error");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origBtnText;
+                }
+                return;
+            }
+            const taskTitle = document.getElementById("story-title-input")?.value?.trim();
+            const taskRole = document.getElementById("subtask-role-select")?.value || "Backend";
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || "Could not create story.");
+            const response = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${parentStoryId}/tasks`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${state.token}`
+                },
+                body: JSON.stringify({
+                    title: taskTitle,
+                    task_type: taskRole,
+                    status: "To Do"
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Could not create subtask.");
+            }
+
+            showToast("Subtask created successfully!", "success");
+        } else {
+            const title = document.getElementById("story-title-input").value;
+            const desc = document.getElementById("story-desc-input").value;
+            const priority = document.getElementById("story-priority-input").value;
+            const points = parseInt(document.getElementById("story-points-input").value);
+
+            const acRaw = document.getElementById("story-ac-input")?.value || "";
+            const acList = acRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+
+            const subtasksRaw = document.getElementById("story-subtasks-input")?.value || "";
+            const subtasksList = subtasksRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+
+            const response = await fetch(`${API_BASE}/api/projects/${projectId}/stories`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${state.token}`
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: desc,
+                    acceptance_criteria: acList,
+                    priority: priority,
+                    story_points: points,
+                    status: "To Do",
+                    comments: []
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Could not create story.");
+            }
+
+            const createdStory = await response.json();
+
+            // Create inline subtasks if any were entered
+            for (const line of subtasksList) {
+                let role = "Backend";
+                let titleText = line;
+                const match = line.match(/^(.*?)\s*\[(.*?)\]\s*$/i);
+                if (match) {
+                    titleText = match[1].trim();
+                    const matchedRole = match[2].trim();
+                    if (matchedRole.toLowerCase() === "frontend") role = "Frontend";
+                    else if (matchedRole.toLowerCase() === "backend") role = "Backend";
+                    else if (matchedRole.toLowerCase() === "ai") role = "AI";
+                    else if (matchedRole.toLowerCase() === "manager") role = "Manager";
+                    else if (matchedRole.toLowerCase() === "qa") role = "QA";
+                    else role = matchedRole.charAt(0).toUpperCase() + matchedRole.slice(1);
+                }
+                if (titleText) {
+                    await fetch(`${API_BASE}/api/projects/${projectId}/stories/${createdStory.id}/tasks`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${state.token}`
+                        },
+                        body: JSON.stringify({
+                            title: titleText,
+                            task_type: role,
+                            status: "To Do"
+                        })
+                    });
+                }
+            }
+
+            showToast("User story created successfully!", "success");
         }
 
-        const createdStory = await response.json();
-
-        // Create subtasks if any were entered
-        for (const line of subtasksList) {
-            let role = "Backend";
-            let titleText = line;
-            const match = line.match(/^(.*?)\s*\[(.*?)\]\s*$/i);
-            if (match) {
-                titleText = match[1].trim();
-                const matchedRole = match[2].trim();
-                if (matchedRole.toLowerCase() === "frontend") role = "Frontend";
-                else if (matchedRole.toLowerCase() === "backend") role = "Backend";
-                else if (matchedRole.toLowerCase() === "ai") role = "AI";
-                else if (matchedRole.toLowerCase() === "manager") role = "Manager";
-                else if (matchedRole.toLowerCase() === "qa") role = "QA";
-                else role = matchedRole.charAt(0).toUpperCase() + matchedRole.slice(1);
-            }
-            if (titleText) {
-                await fetch(`${API_BASE}/api/projects/${projectId}/stories/${createdStory.id}/tasks`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${state.token}`
-                    },
-                    body: JSON.stringify({
-                        title: titleText,
-                        task_type: role,
-                        status: "To Do"
-                    })
-                });
-            }
-        }
-
-        showToast("User story created successfully!", "success");
         storyForm.reset();
         storyModal.classList.remove("active");
-        loadStories(); // Refresh list
+        loadStories(); // Refresh list & board views
     } catch (e) {
         showToast(e.message, "error");
     } finally {
@@ -3299,51 +3483,59 @@ document.getElementById("story-filter-priority")?.addEventListener("change", app
 
 document.getElementById("btn-generate-stories")?.addEventListener("click", async () => {
     if (!checkAdminAccess("generate user stories")) return;
-    const projectId = document.getElementById("story-project-select").value;
+    const projectId = document.getElementById("story-project-select")?.value || state.globalProjectId || state.currentProject?.id;
     if (!projectId) {
-        showToast("Please select a project first", "error");
+        showToast("Please select a project from the top bar first to generate stories.", "error");
         return;
     }
 
+    let title = "Generate Stories with AI?";
+    let msg = "Are you sure you want to generate user stories from this project's documents using AI? This will query the AI and incur API usage costs.";
+    let intent = "primary";
+
     if (state.stories && state.stories.length > 0) {
-        if (!confirm("User stories have already been generated/created for this project. Are you sure you want to generate stories again? This will query the AI and may incur duplicate API costs.")) {
-            return;
-        }
-    } else {
-        if (!confirm("Are you sure you want to generate user stories from this project's documents using AI? This will query the AI and incur API usage costs.")) {
-            return;
-        }
+        title = "Regenerate Stories?";
+        msg = "User stories have already been generated/created for this project.<br><br>Are you sure you want to generate stories again? This will query the AI and may incur duplicate API costs.";
+        intent = "warning";
     }
 
-    const btn = document.getElementById("btn-generate-stories");
-    btn.innerHTML = `<i class="lucide-loader animate-spin"></i> Generating...`;
-    btn.disabled = true;
+    showConfirmModal(
+        title,
+        msg,
+        "Generate",
+        async () => {
+            const btn = document.getElementById("btn-generate-stories");
+            btn.innerHTML = `<i class="lucide-loader animate-spin"></i> Generating...`;
+            btn.disabled = true;
 
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${state.token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({})
-        });
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/generate`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${state.token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({})
+                });
 
-        if (res.ok) {
-            const data = await res.json();
-            showToast(data.message || "Successfully generated stories", "success");
-            loadStories();
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to generate stories", "error");
-        }
-    } catch (e) {
-        showToast("Network error generating stories", "error");
-    } finally {
-        btn.innerHTML = `<i data-lucide="sparkles"></i> Generate Stories with AI`;
-        btn.disabled = false;
-        if (window.lucide) lucide.createIcons();
-    }
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || "Successfully generated stories", "success");
+                    loadStories();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || "Failed to generate stories", "error");
+                }
+            } catch (e) {
+                showToast("Network error generating stories", "error");
+            } finally {
+                btn.innerHTML = `<i data-lucide="sparkles"></i> Generate Stories with AI`;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        },
+        intent
+    );
 });
 
 function getProjectKeyPrefix(projectId) {
@@ -4069,57 +4261,79 @@ window.addStoryComment = async function (projectId, storyId) {
 
 window.deleteStory = async function (projectId, storyId, skipConfirm = false, skipReload = false) {
     if (!checkAdminAccess("delete user stories")) return;
-    if (!skipConfirm && !confirm("Are you sure you want to delete this user story? This will also delete all of its tasks.")) return;
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${storyId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        if (res.ok) {
-            if (!skipConfirm) showToast("User story deleted", "success");
-            closeStoryDetail();
-            if (!skipReload) loadStories();
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to delete story", "error");
+    
+    const doDelete = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${storyId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${state.token}` }
+            });
+            if (res.ok) {
+                if (!skipConfirm) showToast("User story deleted", "success");
+                closeStoryDetail();
+                if (!skipReload) loadStories();
+            } else {
+                const err = await res.json();
+                showToast(err.detail || "Failed to delete story", "error");
+            }
+        } catch (e) {
+            showToast(e.message, "error");
         }
-    } catch (e) {
-        showToast(e.message, "error");
+    };
+
+    if (skipConfirm) {
+        doDelete();
+    } else {
+        showConfirmModal(
+            "Delete User Story?",
+            "Are you sure you want to delete this user story? This will also delete all of its tasks.",
+            "Delete Story",
+            doDelete,
+            "danger"
+        );
     }
 };
 
 window.deleteTask = async function (projectId, storyId, taskId) {
     if (!checkAdminAccess("delete tasks")) return;
-    if (!confirm("Are you sure you want to delete this task?")) return;
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${storyId}/tasks/${taskId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        if (res.ok) {
-            showToast("Task deleted", "success");
-            await loadStories();
+    
+    showConfirmModal(
+        "Delete Task?",
+        "Are you sure you want to delete this task?",
+        "Delete",
+        async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${storyId}/tasks/${taskId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+                if (res.ok) {
+                    showToast("Task deleted", "success");
+                    await loadStories();
 
-            // Reload story details panel
-            const sRes = await fetch(`${API_BASE}/api/projects/${projectId}/stories`, {
-                headers: { "Authorization": `Bearer ${state.token}` }
-            });
-            if (sRes.ok) {
-                const stories = await sRes.json();
-                const currentStory = stories.find(s => s.id === storyId);
-                if (currentStory) {
-                    renderStoryDetail(projectId, currentStory);
+                    // Reload story details panel
+                    const sRes = await fetch(`${API_BASE}/api/projects/${projectId}/stories`, {
+                        headers: { "Authorization": `Bearer ${state.token}` }
+                    });
+                    if (sRes.ok) {
+                        const stories = await sRes.json();
+                        const currentStory = stories.find(s => s.id === storyId);
+                        if (currentStory) {
+                            renderStoryDetail(projectId, currentStory);
+                        } else {
+                            document.getElementById("story-detail-panel").classList.add("hidden");
+                        }
+                    }
                 } else {
-                    document.getElementById("story-detail-panel").classList.add("hidden");
+                    const err = await res.json();
+                    showToast(err.detail || "Failed to delete task", "error");
                 }
+            } catch (e) {
+                showToast(e.message, "error");
             }
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to delete task", "error");
-        }
-    } catch (e) {
-        showToast(e.message, "error");
-    }
+        },
+        "danger"
+    );
 };
 
 window.addAcceptanceCriterion = async function (projectId, storyId) {
@@ -4151,11 +4365,16 @@ window.addAcceptanceCriterion = async function (projectId, storyId) {
 
 window.removeAcceptanceCriterion = async function (projectId, storyId, idx) {
     if (!checkAdminAccess("edit story details")) return;
-    if (!confirm("Are you sure you want to delete this acceptance criterion?")) return;
-    const story = (state.stories || []).find(s => s.id === storyId);
-    if (!story) return;
-    const updatedACs = (story.acceptance_criteria || []).filter((_, i) => i !== idx);
-    try {
+    
+    showConfirmModal(
+        "Delete Criterion?",
+        "Are you sure you want to delete this acceptance criterion?",
+        "Delete",
+        async () => {
+            const story = (state.stories || []).find(s => s.id === storyId);
+            if (!story) return;
+            const updatedACs = (story.acceptance_criteria || []).filter((_, i) => i !== idx);
+            try {
         await updateStoryField(projectId, storyId, 'acceptance_criteria', updatedACs);
         await loadStories();
         const refreshedStory = (state.stories || []).find(s => s.id === storyId);
@@ -4165,6 +4384,9 @@ window.removeAcceptanceCriterion = async function (projectId, storyId, idx) {
     } catch (e) {
         showToast(e.message, "error");
     }
+        },
+        "danger"
+    );
 };
 
 window.addStoryTask = async function (projectId, storyId) {
@@ -4856,41 +5078,47 @@ window.jiraListBulkDelete = async function () {
     const independentTasks = taskChecked.filter(cb => !selectedStoryIds.has(String(cb.dataset.storyId)));
     const totalSubtasksToDelete = cascadedTasksCount + independentTasks.length;
 
-    if (!confirm(`Are you sure you want to delete ${storyChecked.length} stories and ${totalSubtasksToDelete} subtasks? This cannot be undone.`)) return;
+    showConfirmModal(
+        "Bulk Delete?",
+        `Are you sure you want to delete <strong>${storyChecked.length}</strong> stories and <strong>${totalSubtasksToDelete}</strong> subtasks?<br><br><small>This cannot be undone.</small>`,
+        "Delete All",
+        async () => {
+            const projectId = document.getElementById('story-project-select')?.value;
+            if (!projectId) return;
 
-    const projectId = document.getElementById('story-project-select')?.value;
-    if (!projectId) return;
+            let deletedStoriesCount = 0;
+            let deletedTasksCount = 0;
 
-    let deletedStoriesCount = 0;
-    let deletedTasksCount = 0;
+            // Delete stories (this deletes their child tasks too)
+            for (const cb of storyChecked) {
+                try {
+                    await deleteStory(projectId, parseInt(cb.dataset.id), true, true);
+                    deletedStoriesCount++;
+                } catch (err) { console.error('Bulk delete story error:', err); }
+            }
 
-    // Delete stories (this deletes their child tasks too)
-    for (const cb of storyChecked) {
-        try {
-            await deleteStory(projectId, parseInt(cb.dataset.id), true, true);
-            deletedStoriesCount++;
-        } catch (err) { console.error('Bulk delete story error:', err); }
-    }
+            // Delete individual tasks (only if their parent story wasn't already deleted)
+            for (const cb of independentTasks) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${cb.dataset.storyId}/tasks/${cb.dataset.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${state.token}` }
+                    });
+                    if (res.ok) deletedTasksCount++;
+                } catch (err) { console.error('Bulk delete task error:', err); }
+            }
 
-    // Delete individual tasks (only if their parent story wasn't already deleted)
-    for (const cb of independentTasks) {
-        try {
-            const res = await fetch(`${API_BASE}/api/projects/${projectId}/stories/${cb.dataset.storyId}/tasks/${cb.dataset.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${state.token}` }
-            });
-            if (res.ok) deletedTasksCount++;
-        } catch (err) { console.error('Bulk delete task error:', err); }
-    }
+            const toastMsg = `Deleted ${deletedStoriesCount} stories (including ${cascadedTasksCount} subtasks)` +
+                (deletedTasksCount > 0 ? ` and ${deletedTasksCount} other subtasks` : '');
+            showToast(toastMsg, 'success');
+            jiraListClearSelection();
 
-    const toastMsg = `Deleted ${deletedStoriesCount} stories (including ${cascadedTasksCount} subtasks)` +
-        (deletedTasksCount > 0 ? ` and ${deletedTasksCount} other subtasks` : '');
-    showToast(toastMsg, 'success');
-    jiraListClearSelection();
-
-    // Refresh the stories list
-    const btn = document.getElementById('btn-load-stories');
-    if (btn) btn.click();
+            // Refresh the stories list
+            const btn = document.getElementById('btn-load-stories');
+            if (btn) btn.click();
+        },
+        "danger"
+    );
 };
 
 window.handleBoardDrop = async function (e, newStatus) {
@@ -4999,7 +5227,10 @@ async function loadTeamMembers(projectId) {
             const dateStr = new Date(m.created_at).toLocaleDateString();
             const tr = document.createElement("tr");
 
-            const removeBtnHTML = `
+            const isOwner = (selectedProj && selectedProj.owner_id === m.user_id) || (state.currentProject && state.currentProject.owner_id === m.user_id);
+            const removeBtnHTML = isOwner ? `
+                <span title="Project Creator cannot be removed" style="font-size: 0.75rem; color: #64748b; font-weight: 600; background: #f1f5f9; padding: 4px 8px; border-radius: 6px;">Creator</span>
+            ` : `
                 <button class="btn-icon-danger" onclick="removeTeamMember(${projectId}, ${m.id})">
                     <i data-lucide="user-minus"></i>
                 </button>
@@ -5124,23 +5355,30 @@ document.getElementById("btn-auto-assign")?.addEventListener("click", async (e) 
 
 window.removeTeamMember = async function (projectId, memberId) {
     if (!checkAdminAccess("remove team members")) return;
-    if (!confirm("Remove this team member? Their tasks will be unassigned.")) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/projects/${projectId}/team/${memberId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        if (res.ok) {
-            showToast("Member removed", "success");
-            loadTeamMembers(projectId);
-        } else {
-            const err = await res.json();
-            showToast(err.detail || "Failed to remove member", "error");
-        }
-    } catch (e) {
-        showToast(e.message, "error");
-    }
+    
+    showConfirmModal(
+        "Remove Team Member?",
+        "Are you sure you want to remove this team member? Their tasks will be unassigned.",
+        "Remove",
+        async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${projectId}/team/${memberId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+                if (res.ok) {
+                    showToast("Member removed", "success");
+                    loadTeamMembers(projectId);
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || "Failed to remove member", "error");
+                }
+            } catch (e) {
+                showToast(e.message, "error");
+            }
+        },
+        "danger"
+    );
 };
 
 window.updateMemberRole = async function (projectId, memberId, email, newRole) {
@@ -5520,7 +5758,33 @@ document.addEventListener('DOMContentLoaded', () => {
     enableDragScroll('#stories-list-scroll-wrapper');
     setupKanbanScrollbars();
     bindNotificationEvents();
+    bindUserProfileMenu();
 });
+
+function bindUserProfileMenu() {
+    const toggleBtn = document.getElementById("user-badge-menu-toggle");
+    const menu = document.getElementById("user-account-menu");
+    
+    if (!toggleBtn || !menu) return;
+    
+    toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isHidden = menu.style.display === "none";
+        menu.style.display = isHidden ? "block" : "none";
+        if (isHidden) {
+            toggleBtn.style.background = "var(--bg-base)";
+        } else {
+            toggleBtn.style.background = "var(--bg-surface)";
+        }
+    });
+    
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest("#user-badge-menu-toggle") && !e.target.closest("#user-account-menu")) {
+            menu.style.display = "none";
+            toggleBtn.style.background = "var(--bg-surface)";
+        }
+    });
+}
 
 
 // =====================================================================
@@ -5652,5 +5916,157 @@ function bindNotificationEvents() {
     });
 }
 
+// =====================================================================
+// Global Delete Project Modal Handlers
+// =====================================================================
+document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#btn-delete-project");
+    if (!btn) return;
+    e.preventDefault();
 
+    const deleteProjectModal = document.getElementById("delete-project-modal");
+    if (!deleteProjectModal) return;
 
+    const selProjId = document.getElementById("global-project-select")?.value;
+    const detailTitle = document.getElementById("detail-project-title")?.textContent?.trim();
+
+    let targetDeleteProject = state.currentProject 
+        || state.projects?.find(p => p.id == state.globalProjectId) 
+        || state.projects?.find(p => p.id == selProjId);
+
+    if (!targetDeleteProject && detailTitle && detailTitle !== "Project Name") {
+        targetDeleteProject = {
+            id: state.globalProjectId || selProjId,
+            name: detailTitle
+        };
+    }
+
+    if (!targetDeleteProject || !targetDeleteProject.name) {
+        showToast("Please select a project first to delete.", "error");
+        return;
+    }
+
+    window._deleteTargetProject = targetDeleteProject;
+
+    const nameDisplay = document.getElementById("delete-project-name-display");
+    const codeConfirm = document.getElementById("delete-project-code-confirm");
+    const deleteConfirmInput = document.getElementById("delete-project-input-confirm");
+    const deleteConfirmSubmit = document.getElementById("btn-confirm-delete-project-submit");
+    const deleteStatusMsg = document.getElementById("delete-confirm-status-msg");
+
+    if (nameDisplay) nameDisplay.textContent = targetDeleteProject.name;
+    if (codeConfirm) codeConfirm.textContent = targetDeleteProject.name;
+    if (deleteConfirmInput) deleteConfirmInput.value = "";
+    
+    if (deleteStatusMsg) {
+        deleteStatusMsg.innerHTML = `Type <strong>${targetDeleteProject.name}</strong> above to unlock the delete button.`;
+        deleteStatusMsg.style.color = '#dc2626';
+    }
+    
+    if (deleteConfirmSubmit) {
+        deleteConfirmSubmit.disabled = true;
+        deleteConfirmSubmit.style.opacity = "0.5";
+        deleteConfirmSubmit.style.cursor = "not-allowed";
+    }
+
+    deleteProjectModal.style.display = "flex";
+    deleteProjectModal.classList.add("active");
+    if (deleteConfirmInput) setTimeout(() => deleteConfirmInput.focus(), 100);
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const deleteConfirmInput = document.getElementById("delete-project-input-confirm");
+    const deleteConfirmSubmit = document.getElementById("btn-confirm-delete-project-submit");
+    const deleteStatusMsg = document.getElementById("delete-confirm-status-msg");
+    const deleteProjectForm = document.getElementById("delete-project-confirm-form");
+
+    if (deleteConfirmInput) {
+        deleteConfirmInput.addEventListener("input", () => {
+            const proj = window._deleteTargetProject;
+            if (!proj) return;
+            const typed = deleteConfirmInput.value.trim().toLowerCase();
+            const expected = proj.name.trim().toLowerCase();
+
+            if (typed === expected) {
+                if (deleteConfirmSubmit) {
+                    deleteConfirmSubmit.disabled = false;
+                    deleteConfirmSubmit.style.opacity = "1";
+                    deleteConfirmSubmit.style.cursor = "pointer";
+                }
+                if (deleteStatusMsg) {
+                    deleteStatusMsg.innerHTML = '✓ Name matched! Click Delete Project below.';
+                    deleteStatusMsg.style.color = '#16a34a';
+                }
+            } else {
+                if (deleteConfirmSubmit) {
+                    deleteConfirmSubmit.disabled = true;
+                    deleteConfirmSubmit.style.opacity = "0.5";
+                    deleteConfirmSubmit.style.cursor = "not-allowed";
+                }
+                if (deleteStatusMsg) {
+                    deleteStatusMsg.innerHTML = `Type <strong>${proj.name}</strong> above to unlock the delete button.`;
+                    deleteStatusMsg.style.color = '#dc2626';
+                }
+            }
+        });
+    }
+
+    const closeDeleteModal = () => {
+        const modal = document.getElementById("delete-project-modal");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.display = "";
+        }
+        window._deleteTargetProject = null;
+    };
+
+    const btnCloseDeleteModal = document.getElementById("btn-close-delete-project-modal");
+    const btnCancelDeleteModal = document.getElementById("btn-cancel-delete-project-modal");
+    if (btnCloseDeleteModal) btnCloseDeleteModal.addEventListener("click", closeDeleteModal);
+    if (btnCancelDeleteModal) btnCancelDeleteModal.addEventListener("click", closeDeleteModal);
+
+    if (deleteProjectForm) {
+        deleteProjectForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const proj = window._deleteTargetProject;
+            if (!proj) return;
+            if (!checkAdminAccess("delete projects")) return;
+
+            const typed = deleteConfirmInput ? deleteConfirmInput.value.trim().toLowerCase() : "";
+            const expected = proj.name.trim().toLowerCase();
+            if (typed !== expected) return;
+
+            const origBtnText = deleteConfirmSubmit ? deleteConfirmSubmit.innerHTML : "Delete Project";
+            if (deleteConfirmSubmit) {
+                deleteConfirmSubmit.disabled = true;
+                deleteConfirmSubmit.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;"></i> Deleting...';
+                if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/projects/${proj.id}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+
+                if (!res.ok) throw new Error("Failed to delete project.");
+
+                showToast(`Project '${proj.name}' and all associated files deleted successfully.`, "success");
+                closeDeleteModal();
+                state.currentProject = null;
+                state.globalProjectId = "";
+                window.location.hash = "#projects";
+                loadProjects();
+                loadWorkspaceData();
+            } catch (err) {
+                showToast(err.message, "error");
+            } finally {
+                if (deleteConfirmSubmit) {
+                    deleteConfirmSubmit.disabled = false;
+                    deleteConfirmSubmit.innerHTML = origBtnText;
+                }
+            }
+        });
+    }
+});

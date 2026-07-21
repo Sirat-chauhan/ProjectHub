@@ -235,23 +235,36 @@
                 </a>
             </nav>
 
-            <div class="sidebar-footer">
-                <div class="user-badge">
-                    <div class="user-avatar" id="user-avatar-char" style="overflow:hidden; padding:0;">U</div>
-                    <img id="sidebar-avatar-img" src="" alt="Avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:none;flex-shrink:0;">
-                    <div class="user-details">
-                        <h4 id="user-fullname">User Name</h4>
-                        <p id="user-email">email@company.com</p>
+            <div class="sidebar-footer" style="position: relative;">
+                <!-- Popup Menu -->
+                <div id="user-account-menu" style="display: none; position: absolute; bottom: calc(100% + 8px); left: 0; width: 100%; padding: 0; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); z-index: 100; background: #ffffff; border: 1px solid #e2e8f0;">
+                    <div style="padding: 12px 16px; font-size: 0.75rem; font-weight: 600; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">
+                        Account
+                    </div>
+                    <div style="height: 1px; background: #e2e8f0; width: 100%; margin-bottom: 4px;"></div>
+                    <div style="padding: 4px;">
+                        <button class="account-menu-item" id="btn-edit-profile" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: transparent; border: none; border-radius: 6px; cursor: pointer; color: #0f172a; font-size: 0.9rem; font-weight: 500; text-align: left;">
+                            <i data-lucide="user" style="width: 16px; height: 16px; color: #0f172a;"></i>
+                            Manage Profile
+                        </button>
+                        <button class="account-menu-item" id="btn-signout" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: transparent; border: none; border-radius: 6px; cursor: pointer; color: #ef4444; font-size: 0.9rem; font-weight: 500; text-align: left;">
+                            <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                            Logout
+                        </button>
                     </div>
                 </div>
-                <button class="btn-signout" id="btn-edit-profile" style="margin-bottom: 8px; color: var(--color-primary); border-color: rgba(37, 99, 235, 0.2); background: rgba(37, 99, 235, 0.05);">
-                    <i data-lucide="user-cog"></i>
-                    <span>Edit Profile</span>
-                </button>
-                <button class="btn-signout" id="btn-signout">
-                    <i data-lucide="log-out"></i>
-                    <span>Sign Out</span>
-                </button>
+
+                <div class="user-badge" id="user-badge-menu-toggle" style="cursor: pointer; border: 1.5px solid #0f172a; border-radius: 8px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; background: #ffffff;">
+                    <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                        <div class="user-avatar" id="user-avatar-char" style="overflow:hidden; padding:0; flex-shrink: 0; border-radius: 6px; width: 32px; height: 32px; background: rgba(14, 165, 233, 0.1); color: var(--color-primary); border: none;">U</div>
+                        <img id="sidebar-avatar-img" src="" alt="Avatar" style="width:32px;height:32px;border-radius:6px;object-fit:cover;display:none;flex-shrink:0;">
+                        <div class="user-details" style="overflow: hidden; text-overflow: ellipsis; padding-right: 5px;">
+                            <h4 id="user-fullname" style="margin:0; font-size: 0.9rem; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User Name</h4>
+                            <p id="user-email" style="margin:0; font-size: 0.75rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">email@company.com</p>
+                        </div>
+                    </div>
+                    <i data-lucide="more-vertical" style="width: 16px; height: 16px; color: #94a3b8; flex-shrink: 0;"></i>
+                </div>
             </div>
         </aside>
 
@@ -300,7 +313,7 @@
                 </header>
 
                 <div class="stats-grid">
-                    <div class="stat-card glass-panel">
+                    <div class="stat-card glass-panel" id="stat-card-projects">
                         <div class="stat-icon icon-blue"><i data-lucide="folder"></i></div>
                         <div class="stat-info">
                             <h3 id="stat-projects">0</h3>
@@ -974,56 +987,99 @@
                     </div>
                 </div>
 
-                <!-- Create Manual Story Modal -->
+                <!-- Create Manual Story / Task Modal -->
                 <div id="create-story-modal" class="modal-overlay">
-                    <div class="modal-glass">
-                        <div class="modal-header">
-                            <h3>Create User Story</h3>
-                            <button class="modal-close" id="btn-close-story-modal"><i data-lucide="x"></i></button>
+                    <div class="modal-glass" style="max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 24px 28px; border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
+                            <h3 id="modal-create-issue-title" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Create Issue</h3>
+                            <button class="modal-close" id="btn-close-story-modal" style="background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px; display: flex; align-items: center;"><i data-lucide="x"></i></button>
                         </div>
                         <form id="create-story-form">
-                            <div class="form-group">
-                                <label for="story-title-input">Title</label>
-                                <input type="text" id="story-title-input" required placeholder="As a [user], I want to [action]...">
-                            </div>
-                            <div class="form-group">
-                                <label for="story-desc-input">Description</label>
-                                <textarea id="story-desc-input" rows="3" placeholder="Additional context..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="story-ac-input">Acceptance Criteria (One per line)</label>
-                                <textarea id="story-ac-input" rows="2" placeholder="Criterion 1&#10;Criterion 2"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="story-subtasks-input">Subtasks (One per line, format: Title [Role] e.g. Setup API [Backend])</label>
-                                <textarea id="story-subtasks-input" rows="2" placeholder="Design UI components [Frontend]&#10;Implement API endpoint [Backend]&#10;Integrate RAG prompt [AI]&#10;Test the flow [QA]&#10;Configure server [DevOps]"></textarea>
-                                <small style="color: var(--color-text-muted); font-size: 11px;">Roles: Frontend, Backend, AI, QA, Manager, or any custom role (defaults to Backend if omitted).</small>
-                            </div>
-                            <div class="form-group" style="display: flex; gap: 15px;">
+                            <!-- Top Grid: Issue Type & Priority -->
+                            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                                 <div style="flex: 1;">
-                                    <label for="story-priority-input">Priority</label>
-                                    <select id="story-priority-input" class="form-select">
+                                    <label for="create-issue-type-select" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Issue Type</label>
+                                    <select id="create-issue-type-select" class="form-select" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
+                                        <option value="story" selected>User Story</option>
+                                        <option value="subtask">Subtask / Task</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="story-priority-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Priority</label>
+                                    <select id="story-priority-input" class="form-select" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
                                         <option value="Critical">Critical</option>
                                         <option value="High">High</option>
                                         <option selected value="Medium">Medium</option>
                                         <option value="Low">Low</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <!-- Parent Story (Subtask Only) -->
+                            <div class="form-group" id="subtask-parent-group" style="display: none; margin-bottom: 16px;">
+                                <label for="subtask-parent-story-select" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Parent User Story <span style="color: #ef4444;">*</span></label>
+                                <select id="subtask-parent-story-select" class="form-select" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
+                                    <option value="">-- Select Parent User Story --</option>
+                                </select>
+                            </div>
+
+                            <!-- Task Role / Type (Subtask Only) -->
+                            <div class="form-group" id="subtask-role-group" style="display: none; margin-bottom: 16px;">
+                                <label for="subtask-role-select" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Task Role / Type</label>
+                                <select id="subtask-role-select" class="form-select" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
+                                    <option value="Backend" selected>Backend</option>
+                                    <option value="Frontend">Frontend</option>
+                                    <option value="AI">AI</option>
+                                    <option value="QA">QA</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="DevOps">DevOps</option>
+                                </select>
+                            </div>
+
+                            <!-- Title Field -->
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label for="story-title-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Title <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="story-title-input" required placeholder="As a [user], I want to [action]..." style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+                            </div>
+
+                            <!-- Description (Story Only) -->
+                            <div class="form-group story-only-field" style="margin-bottom: 16px;">
+                                <label for="story-desc-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Description</label>
+                                <textarea id="story-desc-input" rows="3" placeholder="Additional context..." style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box; resize: vertical;"></textarea>
+                            </div>
+
+                            <!-- Acceptance Criteria (Story Only) -->
+                            <div class="form-group story-only-field" style="margin-bottom: 16px;">
+                                <label for="story-ac-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Acceptance Criteria <span style="font-weight: 400; color: #64748b;">(One per line)</span></label>
+                                <textarea id="story-ac-input" rows="2" placeholder="Criterion 1&#10;Criterion 2" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box; resize: vertical;"></textarea>
+                            </div>
+
+                            <!-- Story Points (Story Only) -->
+                            <div class="story-only-field" style="display: flex; gap: 16px; margin-bottom: 16px;">
                                 <div style="flex: 1;">
-                                    <label for="story-points-input">Story Points</label>
-                                    <select id="story-points-input" class="form-select">
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option selected value="3">3</option>
-                                        <option value="5">5</option>
-                                        <option value="8">8</option>
-                                        <option value="13">13</option>
+                                    <label for="story-points-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Story Points</label>
+                                    <select id="story-points-input" class="form-select" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
+                                        <option value="1">1 Point</option>
+                                        <option value="2">2 Points</option>
+                                        <option selected value="3">3 Points</option>
+                                        <option value="5">5 Points</option>
+                                        <option value="8">8 Points</option>
+                                        <option value="13">13 Points</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="modal-actions">
-                                <button type="button" class="btn btn-secondary" id="btn-cancel-story-modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Story</button>
+
+                            <!-- Subtasks Batch Textarea (Story Only) -->
+                            <div class="form-group story-only-field" style="margin-bottom: 20px;">
+                                <label for="story-subtasks-input" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Initial Subtasks <span style="font-weight: 400; color: #64748b;">(Optional, one per line)</span></label>
+                                <textarea id="story-subtasks-input" rows="2" placeholder="Design UI components [Frontend]&#10;Implement API endpoint [Backend]" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box; resize: vertical;"></textarea>
+                                <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">Format: <code>Task Title [Role]</code> e.g. <code>Setup API [Backend]</code>. Roles: Frontend, Backend, AI, QA, Manager.</small>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+                                <button type="button" class="btn btn-secondary" id="btn-cancel-story-modal" style="padding: 9px 18px; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #ffffff; color: #334155;">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="btn-submit-create-issue" style="padding: 9px 22px; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; border: none; background: #0ea5e9; color: #ffffff; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">Save Story</button>
                             </div>
                         </form>
                     </div>
@@ -1229,8 +1285,73 @@
         </div>
     </div>
 
+    <!-- Generic Confirmation Modal -->
+    <div id="generic-confirm-modal" class="modal-overlay">
+        <div class="modal-glass" style="max-width: 440px; padding: 24px; border-radius: 12px; background: #ffffff; border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div style="display: flex; gap: 14px; align-items: flex-start;">
+                    <div id="generic-confirm-icon-wrapper" style="width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #eff6ff; color: #3b82f6;">
+                        <i id="generic-confirm-icon" data-lucide="info" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div>
+                        <h3 id="generic-confirm-title" style="margin: 0; font-size: 1.15rem; font-weight: 600; color: #0f172a; margin-top: 8px;">Confirmation</h3>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeGenericConfirmModal()" style="background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px; margin-top: 4px;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+            </div>
+            
+            <div style="padding-left: 56px; margin-bottom: 24px;">
+                <p id="generic-confirm-message" style="margin: 0; font-size: 0.95rem; color: #475569; line-height: 1.5;"></p>
+            </div>
+
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+                <button type="button" class="btn btn-secondary" onclick="closeGenericConfirmModal()" id="btn-generic-confirm-cancel" style="padding: 8px 18px; border-radius: 8px;">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-generic-confirm-submit" style="padding: 8px 18px; border-radius: 8px; font-weight: 600;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub-style Delete Project Modal -->
+    <div id="delete-project-modal" class="modal-overlay">
+        <div class="modal-glass" style="max-width: 480px; padding: 24px; border-radius: 12px; background: #ffffff; border: 1px solid #fee2e2; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid #fecdd3;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; border: 1px solid #fecdd3; color: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #991b1b;">Delete Project</h3>
+                </div>
+                <button class="modal-close" id="btn-close-delete-project-modal" style="background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px; display: flex; align-items: center;"><i data-lucide="x"></i></button>
+            </div>
+
+            <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;">
+                <p style="margin: 0; font-size: 0.85rem; color: #9b2c2c; line-height: 1.5;">
+                    <strong>Unexpected bad things will happen if you don't read this!</strong><br>
+                    This action <strong>cannot</strong> be undone. This will permanently delete the <strong id="delete-project-name-display" style="font-family: monospace; background: #fee2e2; padding: 1px 5px; border-radius: 4px; color: #991b1b;">project-name</strong> project, its milestones, documents, user stories, tasks, and activity logs.
+                </p>
+            </div>
+
+            <form id="delete-project-confirm-form">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block; line-height: 1.4;">
+                        To confirm, type <code id="delete-project-code-confirm" style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0f172a; font-family: monospace; font-size: 0.85rem; font-weight: 700;">project-name</code> in the box below:
+                    </label>
+                    <input type="text" id="delete-project-input-confirm" placeholder="Type project name to confirm" autocomplete="off" required style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+                    <small id="delete-confirm-status-msg" style="display: block; margin-top: 6px; font-size: 0.8rem; color: #dc2626; font-weight: 500;">
+                        Type the exact project name above to unlock the delete button.
+                    </small>
+                </div>
+
+                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-delete-project-modal" style="padding: 9px 18px; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #ffffff; color: #334155;">Cancel</button>
+                    <button type="submit" id="btn-confirm-delete-project-submit" disabled style="padding: 9px 18px; font-size: 0.88rem; font-weight: 600; border-radius: 8px; cursor: not-allowed; border: none; background: #ef4444; color: #ffffff; opacity: 0.5; transition: all 0.2s;">Delete Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Page loading script -->
-    <script src="js/app.js?v=2.13"></script>
+    <script src="js/app.js?v=2.18"></script>
 </body>
 
 </html>

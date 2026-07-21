@@ -2123,7 +2123,7 @@ h1, h2, h3, h4 {
     height: 100vh;
     background: rgba(5, 7, 10, 0.7);
     backdrop-filter: blur(8px);
-    z-index: 900;
+    z-index: 10000;
     display: none;
     align-items: center;
     justify-content: center;
@@ -2604,4 +2604,12 @@ h1, h2, h3, h4 {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* User Profile Account Menu */
+.account-menu-item:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+}
+.dark-theme .account-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
 }

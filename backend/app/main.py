@@ -115,6 +115,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_no_cache_headers(request, call_next):
+    """
+    Prevent aggressive browser caching for frontend static files (HTML, JS, CSS)
+    during local development so UI/JS updates reflect immediately upon page refresh.
+    """
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith(".html") or path.endswith(".js") or path.endswith(".css"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # Include API Routers
 app.include_router(auth.router)
 app.include_router(projects.router)

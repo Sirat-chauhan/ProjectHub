@@ -262,6 +262,9 @@ def remove_team_member(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
+    if member.user_id == project.owner_id:
+        raise HTTPException(status_code=400, detail="Cannot remove the project creator/owner from the team.")
+
     # Unassign all tasks assigned to this user in this project
     story_ids = [s.id for s in db.query(UserStory).filter(UserStory.project_id == project_id).all()]
     if story_ids:
