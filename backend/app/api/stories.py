@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import case
 from typing import List
+from openai import OpenAI
 
 from backend.app.core.database import get_db
 from backend.app.core.security import get_current_user, get_current_admin_user, check_is_project_manager_or_admin
