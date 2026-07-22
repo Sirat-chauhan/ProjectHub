@@ -11,10 +11,16 @@ from backend.app.models import User, Project, Document, DocumentChunk, UserStory
 from backend.app import schemas
 from backend.app.core.prompts import get_global_stories_prompt, get_single_document_stories_prompt
 
-from openai import OpenAI
-
-# Module-level singleton to avoid re-creating the client on every request
-_openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+try:
+    from langsmith.wrappers import wrap_openai
+    from langsmith import traceable
+    _openai_client = wrap_openai(OpenAI(api_key=settings.OPENAI_API_KEY))
+except ImportError:
+    _openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    def traceable(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 router = APIRouter(prefix="/api/projects/{project_id}/stories", tags=["stories"])
 
@@ -53,7 +59,14 @@ def _auto_assign_tasks(db: Session, project_id: int, stories: list):
     db.commit()
 
 
+def _clean_stories_inputs(inputs: dict) -> dict:
+    cleaned = dict(inputs)
+    cleaned.pop("db", None)
+    cleaned.pop("current_user", None)
+    return cleaned
+
 @router.post("/generate")
+@traceable(name="Project User Stories Generation", run_type="chain", process_inputs=_clean_stories_inputs)
 def generate_stories_from_documents(
     project_id: int,
     request: schemas.GenerateStoriesRequest,
@@ -159,6 +172,7 @@ def generate_stories_from_documents(
 
 
 @router.post("/generate-from-document")
+@traceable(name="Document User Stories Generation", run_type="chain", process_inputs=_clean_stories_inputs)
 def generate_stories_from_single_document(
     project_id: int,
     request: schemas.GenerateStoriesFromDocumentRequest,

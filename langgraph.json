@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "rag_chatbot": "./backend/app/services/rag_graph.py:rag_graph"
+  },
+  "env": ".env"
+}

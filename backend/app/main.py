@@ -10,6 +10,7 @@ from backend.app.api import auth, projects, milestones, documents, logs, chat, s
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
+    # FastAPI Application Entrypoint - LangGraph State Machine Active
     FastAPI Lifespan handler:
     Runs when the server starts up. Ensures PostgreSQL connects,
     enables pgvector, and creates all tables.

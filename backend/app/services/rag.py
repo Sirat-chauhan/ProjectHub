@@ -16,10 +16,16 @@ from backend.app.core.prompts import get_query_intent_prompt
 from openai import OpenAI
 import tiktoken
 
-
-# Initialize OpenAI Client (Make sure OPENAI_API_KEY is in your .env file)
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
+try:
+    from langsmith.wrappers import wrap_openai
+    from langsmith import traceable
+    client = wrap_openai(OpenAI(api_key=settings.OPENAI_API_KEY))
+except ImportError:
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    def traceable(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 import pdfplumber
 
@@ -183,6 +189,7 @@ class RAGService:
 
         return chunks
 
+    @traceable(name="RAG Embedding Generator", run_type="embedding")
     def embed_text(self, text: str) -> List[float]:
         """
         Generates dense vector embedding using OpenAI API (text-embedding-3-small).
@@ -257,6 +264,7 @@ class RAGService:
                         os.remove(physical_path)
                 except Exception as clean_err:
                     print(f"Failed to clean up temp file {physical_path}: {str(clean_err)}")
+    @traceable(name="RAG Query Intent Classifier", run_type="llm")
     def analyze_query_intent(self, query_text: str) -> Dict[str, Any]:
         """
         Uses OpenAI to classify the query intent. Detects if it's a summary/overview request
@@ -286,8 +294,13 @@ class RAGService:
         except Exception as e:
             # Safe fallback to standard similarity search on error
             print(f"[Query Analysis Error] {str(e)}")
-            return {"is_summary": False, "category": "all"}
+def _clean_retriever_inputs(inputs: dict) -> dict:
+    cleaned = dict(inputs)
+    cleaned.pop("db", None)
+    cleaned.pop("self", None)
+    return cleaned
 
+    @traceable(name="RAG Hybrid Retriever", run_type="retriever", process_inputs=_clean_retriever_inputs)
     def query_project_chunks(self, db: Session, project_id: int, query_text: str, milestone_id: int = None, category: str = None, top_k: int = 5) -> List[Dict[str, Any]]:
         """
         Performs pgvector Cosine Distance similarity search scoped by project_id and optionally milestone_id.

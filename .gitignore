@@ -26,3 +26,6 @@ Desktop.ini
 .pytest_cache/
 .coverage
 htmlcov/
+
+# LangGraph API
+.langgraph_api
