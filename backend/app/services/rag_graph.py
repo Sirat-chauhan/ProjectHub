@@ -1,8 +1,7 @@
 import sys
 import os
 
-# Ensure the root project directory is in sys.path for backend module imports
-_project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 

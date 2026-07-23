@@ -1212,7 +1212,9 @@ async function loadProjects() {
     if (!state.token) return;
 
     const container = document.getElementById("project-cards-container");
-    container.innerHTML = '<p class="timeline-empty">Loading projects...</p>';
+    if (!container.children.length || container.querySelector('.timeline-empty')) {
+        container.innerHTML = '<p class="timeline-empty">Loading projects...</p>';
+    }
 
     try {
         const response = await fetch(`${API_BASE}/api/projects`, {
@@ -1812,7 +1814,11 @@ function bindMilestoneEvents() {
 async function loadMilestonesRoadmap() {
     if (!state.token) return;
 
-    const filterVal = document.getElementById("milestone-project-filter").value;
+    const filterElem = document.getElementById("milestone-project-filter");
+    if (filterElem && !filterElem.value && state.globalProjectId) {
+        filterElem.value = state.globalProjectId;
+    }
+    const filterVal = filterElem ? filterElem.value : (state.globalProjectId || "");
     const container = document.getElementById("roadmap-timeline");
 
     if (!filterVal) {
@@ -1827,7 +1833,9 @@ async function loadMilestonesRoadmap() {
         return;
     }
 
-    container.innerHTML = '<p class="timeline-empty">Loading roadmap...</p>';
+    if (!container.children.length || container.querySelector('.timeline-empty-state') || container.querySelector('.timeline-empty')) {
+        container.innerHTML = '<p class="timeline-empty">Loading roadmap...</p>';
+    }
 
     try {
         const res = await fetch(`${API_BASE}/api/milestones/project/${filterVal}`, {
@@ -2668,7 +2676,9 @@ async function loadActivityLogs() {
     if (!state.token) return;
 
     const tbody = document.getElementById("logs-table-body");
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading audit logs...</td></tr>';
+    if (!tbody.children.length || tbody.innerText.includes("Loading audit logs")) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading audit logs...</td></tr>';
+    }
 
     try {
         const res = await fetch(`${API_BASE}/api/logs`, {
@@ -2723,7 +2733,7 @@ async function loadActivityLogs() {
 // =====================================================================
 // Dropdowns helper
 // =====================================================================
-async function populateProjectDropdowns() {
+async function populateProjectDropdowns(force = false) {
     if (!state.token) return;
 
     const uploadProjSelect = document.getElementById("upload-project-id");
@@ -2733,49 +2743,44 @@ async function populateProjectDropdowns() {
     const storyProjSelect = document.getElementById("story-project-select");
     const globalSelect = document.getElementById("global-project-select");
 
+    const isPopulated = globalSelect && globalSelect.options.length > 1;
+
     try {
-        const res = await fetch(`${API_BASE}/api/projects`, {
-            headers: { "Authorization": `Bearer ${state.token}` }
-        });
-        const projects = await res.json();
-        state.projects = projects;
+        if (!isPopulated || force || !state.projects || state.projects.length === 0) {
+            const res = await fetch(`${API_BASE}/api/projects`, {
+                headers: { "Authorization": `Bearer ${state.token}` }
+            });
+            const projects = await res.json();
+            state.projects = projects;
 
-        // Save current selections to restore after re-population
-        const valUpload = uploadProjSelect.value;
-        const valChat = chatProjSelect.value;
-        const valFilter = filterProjSelect.value;
-        const valCreate = createMilestoneSelect.value;
-        const valStory = storyProjSelect ? storyProjSelect.value : "";
-        const valGlobal = globalSelect ? (globalSelect.value || state.globalProjectId || "") : "";
+            // Clear and build dropdown options ONCE
+            if (uploadProjSelect) uploadProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
+            if (chatProjSelect) chatProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
+            if (filterProjSelect) filterProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
+            if (createMilestoneSelect) createMilestoneSelect.innerHTML = '<option value="">-- Choose Project --</option>';
+            if (storyProjSelect) storyProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
+            if (globalSelect) globalSelect.innerHTML = '<option value="">— Select a project —</option>';
 
-        // Clear all dropdowns
-        uploadProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
-        chatProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
-        filterProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
-        createMilestoneSelect.innerHTML = '<option value="">-- Choose Project --</option>';
-        if (storyProjSelect) storyProjSelect.innerHTML = '<option value="">-- Choose Project --</option>';
-        if (globalSelect) globalSelect.innerHTML = '<option value="">— Select a project —</option>';
+            projects.forEach(p => {
+                const makeOpt = () => {
+                    const o = document.createElement("option");
+                    o.value = p.id;
+                    o.textContent = p.name;
+                    return o;
+                };
+                if (uploadProjSelect) uploadProjSelect.appendChild(makeOpt());
+                if (chatProjSelect) chatProjSelect.appendChild(makeOpt());
+                if (filterProjSelect) filterProjSelect.appendChild(makeOpt());
+                if (createMilestoneSelect) createMilestoneSelect.appendChild(makeOpt());
+                if (storyProjSelect) storyProjSelect.appendChild(makeOpt());
+                if (globalSelect) globalSelect.appendChild(makeOpt());
+            });
+        }
 
-        projects.forEach(p => {
-            const makeOpt = () => {
-                const o = document.createElement("option");
-                o.value = p.id;
-                o.textContent = p.name;
-                return o;
-            };
-            uploadProjSelect.appendChild(makeOpt());
-            chatProjSelect.appendChild(makeOpt());
-            filterProjSelect.appendChild(makeOpt());
-            createMilestoneSelect.appendChild(makeOpt());
-            if (storyProjSelect) storyProjSelect.appendChild(makeOpt());
-            if (globalSelect) globalSelect.appendChild(makeOpt());
-        });
-
-        // Restore values — prefer global selection for all page dropdowns
-        const effectiveGlobal = valGlobal || state.globalProjectId || "";
+        // Restore selections instantly without rebuilding options
+        const effectiveGlobal = state.globalProjectId || (globalSelect ? globalSelect.value : "") || "";
         if (globalSelect) {
             globalSelect.value = effectiveGlobal;
-            // Maintain bold visual emphasis
             if (effectiveGlobal) {
                 globalSelect.classList.add("selected-bold");
             } else {
@@ -2783,30 +2788,13 @@ async function populateProjectDropdowns() {
             }
         }
 
-        // If global project is set, propagate it to all page dropdowns
         if (effectiveGlobal) {
-            uploadProjSelect.value = effectiveGlobal;
-            chatProjSelect.value = effectiveGlobal;
-            filterProjSelect.value = effectiveGlobal;
-            createMilestoneSelect.value = effectiveGlobal;
+            if (uploadProjSelect) uploadProjSelect.value = effectiveGlobal;
+            if (chatProjSelect) chatProjSelect.value = effectiveGlobal;
+            if (filterProjSelect) filterProjSelect.value = effectiveGlobal;
+            if (createMilestoneSelect) createMilestoneSelect.value = effectiveGlobal;
             if (storyProjSelect) storyProjSelect.value = effectiveGlobal;
-
-            // Dispatch change event to trigger dependent handlers (like chat milestones/input)
-            chatProjSelect.dispatchEvent(new Event("change"));
-
-            // Trigger dependent loads only if they are the currently active section
-            if (state.activeSection === "milestones") loadMilestonesRoadmap();
-            if (state.activeSection === "stories" && storyProjSelect && storyProjSelect.value) loadStories();
-        } else {
-            // No global — restore individual saved values, but fallback to state.currentProject.id if available
-            const fallbackProjId = state.currentProject ? String(state.currentProject.id) : "";
-            uploadProjSelect.value = valUpload || fallbackProjId;
-            chatProjSelect.value = valChat || fallbackProjId;
-            filterProjSelect.value = valFilter || fallbackProjId;
-            createMilestoneSelect.value = valCreate || fallbackProjId;
-            if (storyProjSelect) storyProjSelect.value = valStory || fallbackProjId;
         }
-
     } catch (e) {
         console.error("Failed to fetch projects list for dropdowns:", e);
     }
@@ -3568,7 +3556,11 @@ function formatStoryKey(story, projectId) {
 }
 
 async function loadStories() {
-    const projectId = document.getElementById("story-project-select")?.value;
+    const storySelect = document.getElementById("story-project-select");
+    if (storySelect && !storySelect.value && state.globalProjectId) {
+        storySelect.value = state.globalProjectId;
+    }
+    const projectId = storySelect ? storySelect.value : (state.globalProjectId || "");
     const listContainer = document.getElementById("stories-backlog-list");
     const detailPanel = document.getElementById("story-detail-panel");
 
@@ -3583,7 +3575,9 @@ async function loadStories() {
         return;
     }
 
-    listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">Loading stories...</div>`;
+    if (!listContainer.children.length || listContainer.innerText.includes("Loading stories")) {
+        listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">Loading stories...</div>`;
+    }
 
     try {
         const [storiesRes, teamRes] = await Promise.all([
@@ -5428,12 +5422,15 @@ async function loadMyTasks() {
 
     if (!todoCol || !inprogCol || !devdoneCol || !readyforqaCol || !qadoneCol || !completeCol) return;
 
-    todoCol.innerHTML = '<p style="color: var(--color-text-muted); text-align: center;">Loading...</p>';
-    inprogCol.innerHTML = '';
-    devdoneCol.innerHTML = '';
-    readyforqaCol.innerHTML = '';
-    qadoneCol.innerHTML = '';
-    completeCol.innerHTML = '';
+    const hasExistingTasks = todoCol.children.length > 0 || inprogCol.children.length > 0 || devdoneCol.children.length > 0;
+    if (!hasExistingTasks) {
+        todoCol.innerHTML = '<p style="color: var(--color-text-muted); text-align: center;">Loading...</p>';
+        inprogCol.innerHTML = '';
+        devdoneCol.innerHTML = '';
+        readyforqaCol.innerHTML = '';
+        qadoneCol.innerHTML = '';
+        completeCol.innerHTML = '';
+    }
 
     try {
         const res = await fetch(`${API_BASE}/api/my-tasks`, {

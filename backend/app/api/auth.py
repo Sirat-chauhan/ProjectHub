@@ -114,6 +114,7 @@ def register(user_in: schemas.UserCreate, request: Request, db: Session = Depend
                     "password": user_in.password,
                     "name": user_in.full_name or user_in.email.split("@")[0]
                 },
+                headers={"Origin": origin},
                 timeout=10
             )
             print(f"[ProjectHub] Neon Auth sign_up response: {res.status_code}")
@@ -228,21 +229,35 @@ def invite_user(
     # Try Neon Auth Registration (No native invite email, so we just sign them up)
     neon_url = get_neon_auth_url()
     neon_invited = False
-    if neon_url:
+    if neon_url and created_new:
         try:
             res = requests.post(
                 f"{neon_url}/sign-up/email",
                 json={
                     "email": invite_in.email,
-                    "password": pwd if created_new else "TempPass123!",
+                    "password": pwd,
                     "name": invite_in.full_name
                 },
+                headers={"Origin": request.headers.get("origin") or "http://localhost:8000"},
                 timeout=10
             )
             neon_invited = True
             print(f"[ProjectHub] Neon Auth registration triggered for {invite_in.email}: {res.status_code}")
         except Exception as e:
             print(f"[ProjectHub] Neon Auth invite notice/error: {e}")
+
+    # Send invite email via direct SMTP with temporary credentials
+    smtp_invited = False
+    if created_new:
+        try:
+            from backend.app.services.email_service import send_invite_email, is_smtp_configured
+            if is_smtp_configured():
+                origin = request.headers.get("origin") or "http://localhost:8000"
+                send_invite_email(invite_in.email, invite_in.full_name, pwd, origin)
+                smtp_invited = True
+                print(f"[ProjectHub] Invite email sent via SMTP to {invite_in.email}")
+        except Exception as e:
+            print(f"[ProjectHub] SMTP invite email error (non-fatal): {e}")
 
     msg = f"User '{user.full_name}' ({user.email}) has been successfully invited and registered!" if created_new else f"User '{user.full_name}' ({user.email}) already exists."
     if neon_invited:
@@ -303,7 +318,7 @@ def assign_admin_role(
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(login_in: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
+def login(login_in: schemas.UserLogin, request: Request, db: Session = Depends(get_db)):
     """Logs in a user via JSON payload (email and password), checking Supabase Auth first then local fallback."""
     validate_corporate_domain(login_in.email)
     check_rate_limit(login_in.email)
@@ -352,7 +367,7 @@ def login(login_in: schemas.UserCreate, request: Request, db: Session = Depends(
             user = User(
                 email=login_in.email,
                 hashed_password=get_password_hash(login_in.password),
-                full_name=login_in.full_name or login_in.email.split("@")[0]
+                full_name=login_in.email.split("@")[0]
             )
             db.add(user)
             db.commit()
@@ -502,23 +517,51 @@ def forgot_password(req: schemas.PasswordResetRequest, request: Request, db: Ses
             status_code=500,
             detail="Neon Auth is not configured. Cannot send password reset email."
         )
+
+    origin = request.headers.get("origin") or "http://localhost:8000"
+    ip = get_client_ip(request)
+
+    # Check if user exists in local DB
+    user = db.query(User).filter(User.email == req.email).first()
+
+    # Auto-ensure user is synced in Neon Auth before triggering reset
+    if user:
+        try:
+            requests.post(
+                f"{neon_url}/sign-up/email",
+                json={
+                    "email": user.email,
+                    "password": "TempSyncPassword123!",
+                    "name": user.full_name or user.email.split("@")[0]
+                },
+                headers={"Origin": origin},
+                timeout=5
+            )
+        except Exception:
+            pass
+
     try:
-        origin = request.headers.get("origin") or "http://localhost:8000"
         res = requests.post(
             f"{neon_url}/request-password-reset",
-            json={
-                "email": req.email,
-                "redirectTo": f"{origin}/?recovery=true"
-            },
+            json={"email": req.email, "redirectTo": f"{origin}/?recovery=true"},
+            headers={"Origin": origin},
             timeout=10
         )
-        print(f"[ProjectHub] Password reset email sent via Neon Auth: {req.email} - {res.status_code}")
-        ip = get_client_ip(request)
-        log_activity(db, None, "password_reset_request", f"Password reset requested for {req.email} [IP: {ip}] [Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}]")
+        print(f"[ProjectHub] Password reset email triggered via Neon Auth for {req.email}: {res.status_code}")
+        
+        if res.status_code >= 400:
+            err_msg = res.json().get("message", res.text) if "application/json" in res.headers.get("Content-Type", "") else res.text
+            print(f"[ProjectHub] Neon Auth error: {err_msg}")
+            # Do not expose internal Neon errors directly to user if it's just "user not found"
+            # But for debugging, we will log it.
+            if "user not found" not in err_msg.lower():
+                raise Exception(f"Neon API Error: {err_msg}")
+                
+        log_activity(db, user.id if user else None, "password_reset_request", f"Password reset requested (Neon Auth) for {req.email} [IP: {ip}]")
         return {"detail": "If an account exists with this email, a password reset link has been sent to your inbox."}
     except Exception as e:
         err_msg = str(e)
-        print(f"[ProjectHub] Forgot password error: {err_msg}")
+        print(f"[ProjectHub] Forgot password error via Neon Auth: {err_msg}")
         raise HTTPException(
             status_code=400,
             detail=f"Could not send password reset link: {err_msg}"
@@ -527,7 +570,7 @@ def forgot_password(req: schemas.PasswordResetRequest, request: Request, db: Ses
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 def reset_password(req: schemas.PasswordResetConfirm, request: Request, db: Session = Depends(get_db)):
-    """Confirms a password reset using the token and updates local password hash."""
+    """Confirms a password reset using the token via Neon Auth and updates local password hash."""
     if len(req.new_password) < 6:
         raise HTTPException(
             status_code=400,
@@ -539,8 +582,10 @@ def reset_password(req: schemas.PasswordResetConfirm, request: Request, db: Sess
             status_code=500,
             detail="Neon Auth is not configured."
         )
+    
+    ip = get_client_ip(request)
     try:
-        # For Better Auth, we assume req.access_token contains the reset token sent in the URL
+        # Confirm password reset with Neon Auth
         res = requests.post(
             f"{neon_url}/reset-password",
             json={
@@ -550,10 +595,28 @@ def reset_password(req: schemas.PasswordResetConfirm, request: Request, db: Sess
             timeout=10
         )
         if res.status_code >= 400:
-            raise HTTPException(status_code=400, detail="Invalid or expired password reset token.")
-        
-        print(f"[ProjectHub] Password reset successfully via Neon Auth")
+            err_detail = "Invalid or expired password reset token."
+            try:
+                err_detail = res.json().get("message", err_detail)
+            except Exception:
+                pass
+            raise HTTPException(status_code=400, detail=err_detail)
+
+        # Update local password hash in PostgreSQL so local database remains in sync
+        neon_data = res.json() if res.headers.get("content-type", "").startswith("application/json") else {}
+        neon_email = neon_data.get("user", {}).get("email")
+        if neon_email:
+            user = db.query(User).filter(User.email == neon_email).first()
+            if user:
+                user.hashed_password = get_password_hash(req.new_password)
+                db.commit()
+                print(f"[ProjectHub] Local password hash updated for {neon_email}")
+
+        log_activity(db, None, "password_reset_complete", f"Password reset completed via Neon Auth [IP: {ip}]")
+        print(f"[ProjectHub] Password reset successfully completed via Neon Auth")
         return {"detail": "Password has been reset successfully. You can now log in with your new password."}
+    except HTTPException:
+        raise
     except Exception as e:
         err_msg = str(e)
         print(f"[ProjectHub] Reset password error: {err_msg}")

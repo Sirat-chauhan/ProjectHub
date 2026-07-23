@@ -10,7 +10,7 @@ from backend.app.core.database import get_db
 import bcrypt
 
 # OAuth2 Scheme definition
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login/form")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies that a plain password matches its hashed form."""
